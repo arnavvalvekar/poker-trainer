@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: SF Pro Text, Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Offsuit component utilities */
+@layer components {
+  .offsuit-pill {
+    @apply inline-flex items-center justify-center h-11 px-5 rounded-full bg-surface text-white text-[15px] font-semibold tracking-tight touch-manipulation transition-transform active:scale-[0.97];
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .offsuit-pill-ghost {
+    @apply inline-flex items-center justify-center h-11 px-4 rounded-full text-offsuit-grey text-[15px] font-medium touch-manipulation transition-colors active:text-white;
+  }
+
+  .offsuit-circle {
+    @apply inline-flex items-center justify-center w-11 h-11 rounded-full bg-surface text-white touch-manipulation transition-transform active:scale-[0.97] shrink-0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .offsuit-module {
+    @apply bg-surface rounded-module shadow-module;
+  }
+}
+
+/* Light theme — softened for readability */
+html.light body {
+  background-color: #f2f2f7;
+  color: #1c1c1e;
+}
+
+html.light .bg-black {
+  background-color: #f2f2f7;
+}
+
+html.light .bg-surface {
+  background-color: #ffffff;
+}
+
+html.light .text-white {
+  color: #1c1c1e;
+}
+
+html.light .text-offsuit-grey {
+  color: #636366;
+}
+
+html.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Safe area for notched phones */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Card deal animation */
+@keyframes card-deal {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.7) rotate(-5deg);
+  }
+  70% {
+    transform: translateY(4px) scale(1.02) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+.animate-card-deal {
+  animation: card-deal 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes card-flip-in {
+  0% {
+    transform: perspective(400px) rotateY(90deg) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(400px) rotateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-card-flip-in {
+  animation: card-flip-in 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes card-reveal {
+  0% {
+    transform: rotateY(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-card-reveal {
+  animation: card-reveal 0.5s ease-out both;
+}
+
+/* Chip bet animation */
+@keyframes chip-bet {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.4);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-chip-bet {
+  animation: chip-bet 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+/* Active seat — subtle white ring pulse */
+@keyframes seat-active {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.animate-seat-active {
+  animation: seat-active 2s ease-in-out infinite;
+}
+
+/* Action banner */
+@keyframes action-banner {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+}
+
+.animate-action-banner {
+  animation: action-banner 1.8s ease-out both;
+}
+
+/* Pot pop */
+@keyframes pot-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.animate-pot-pop {
+  animation: pot-pop 0.4s ease-out both;
+}
+
+/* Thinking dots */
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+.animate-bounce-dot {
+  animation: bounce-dot 1.2s ease-in-out infinite;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+/* Slide up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out both;
+}
+
+/* Bet panel expand */
+@keyframes expand-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 400px;
+  }
+}
+
+.animate-expand-down {
+  animation: expand-down 0.25s ease-out both;
+}
+
+/* Thin scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #48484a;
+  border-radius: 2px;
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}

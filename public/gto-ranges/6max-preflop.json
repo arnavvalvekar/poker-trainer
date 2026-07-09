@@ -1,0 +1,65 @@
+{
+  "preflop": {
+    "UTG_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","ATs","KQs","KJs","AKo","AQo"],
+      "frequencies": { "99": 0.75, "88": 0.5, "ATs": 0.6, "KJs": 0.5 }
+    },
+    "HJ_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A9s","KQs","KJs","KTs","QJs","AKo","AQo","AJo","KQo"],
+      "frequencies": { "77": 0.5, "A9s": 0.6, "AJo": 0.5 }
+    },
+    "CO_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A9s","A8s","A5s","KQs","KJs","KTs","K9s","QJs","QTs","JTs","T9s","AKo","AQo","AJo","ATo","KQo","KJo"],
+      "frequencies": { "66": 0.5, "A8s": 0.5, "A5s": 0.4, "T9s": 0.5, "ATo": 0.5 }
+    },
+    "BTN_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","KQs","KJs","KTs","K9s","K8s","K7s","QJs","QTs","Q9s","Q8s","JTs","J9s","T9s","T8s","98s","87s","76s","AKo","AQo","AJo","ATo","A9o","KQo","KJo","KTo","QJo","QTo","JTo"],
+      "frequencies": { "55": 0.6, "44": 0.5, "33": 0.4, "22": 0.4, "A9o": 0.4, "KTo": 0.5, "QTo": 0.4, "JTo": 0.4 }
+    },
+    "SB_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A9s","A8s","A5s","KQs","KJs","KTs","QJs","QTs","JTs","T9s","AKo","AQo","AJo","ATo","KQo","KJo"],
+      "frequencies": { "A9s": 0.5, "T9s": 0.4 }
+    },
+    "BB_vs_open": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A9s","A5s","A4s","KQs","KJs","KTs","QJs","QTs","JTs","T9s","98s","AKo","AQo","AJo","ATo","KQo"],
+      "frequencies": { "A9s": 0.5, "A5s": 0.4, "98s": 0.3 },
+      "actions": {
+        "default": { "fold": 0.4, "call": 0.45, "raise": 0.15 }
+      }
+    },
+    "BB_vs_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","AKo","AQo"],
+      "actions": { "default": { "fold": 0.5, "call": 0.35, "raise": 0.15 } }
+    },
+    "BTN_vs_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AJs","ATs","AKo","AQo"],
+      "actions": { "default": { "fold": 0.45, "call": 0.4, "raise": 0.15 } }
+    },
+    "CO_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","AKo","AQo","A5s","KQs"],
+      "frequencies": { "A5s": 0.4, "KQs": 0.3 }
+    },
+    "BTN_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AJs","ATs","A5s","A4s","KQs","AKo","AQo","KQo"],
+      "frequencies": { "A5s": 0.5, "A4s": 0.3, "99": 0.3 }
+    },
+    "SB_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","AKo","AQo","A5s"],
+      "frequencies": { "A5s": 0.4 }
+    },
+    "BB_3bet": {
+      "hands": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AJs","ATs","AKo","AQo","A5s"],
+      "frequencies": { "A5s": 0.35, "99": 0.2 }
+    }
+  },
+  "postflop": {
+    "default_cbet": {
+      "hands": [],
+      "actions": { "default": { "fold": 0.3, "call": 0.35, "raise": 0.35 } }
+    },
+    "default_call": {
+      "hands": [],
+      "actions": { "default": { "fold": 0.4, "call": 0.45, "raise": 0.15 } }
+    }
+  }
+}

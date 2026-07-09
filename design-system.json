@@ -1,0 +1,775 @@
+{
+  "$schema": "design-system/v1",
+  "meta": {
+    "name": "Offsuit-Inspired Premium Poker UI",
+    "version": "2.0.0",
+    "description": "Creative-direction blueprint derived from Offsuit marketing and gameplay reference. Premium dark-mode mobile poker: pure-black canvas, generous squircle radii, soft pastel accent gradients, 3D expressive avatars, and restrained grey action controls. Casual warmth meets high-end product polish.",
+    "reference": "Offsuit — 'Casual poker, redesigned.'",
+    "platform": "mobile-first",
+    "viewport": {
+      "referenceWidth": 390,
+      "referenceHeight": 844,
+      "deviceFrame": "iPhone with Dynamic Island; UI respects safe-area insets top and bottom"
+    },
+    "designPersonality": [
+      "Casual yet premium",
+      "Friendly human warmth",
+      "Confident minimalism",
+      "Breathable negative space",
+      "Soft color moments on an otherwise monochrome base"
+    ]
+  },
+
+  "principles": {
+    "hierarchy": "Scale and weight establish importance before color. Hero numbers (balance, pot) are largest; metadata recedes into mid-grey. Color accents appear sparingly on feature cards and rank badges—not on every control.",
+    "contrast": "White primary text on pure black or charcoal surfaces. Never place grey body text directly on black without a container—wrap in a raised surface for legibility.",
+    "depth": "Depth comes from soft drop shadows on cards and avatars, subtle inner highlights on dark buttons, and layered surfaces—not heavy skeuomorphism or neon glows.",
+    "density": "Lobby/home screens breathe: one hero metric, one feature card, one list section. Gameplay screen is table-forward with controls compressed into the bottom third.",
+    "shape": "Everything is rounded. Cards, buttons, modules, and playing cards share a family of large radii (16–24px) or full pills. Sharp corners are never used.",
+    "tone": "Copy and visuals feel approachable ('Casual poker, redesigned.') while layout and spacing signal a premium product. Playful 3D avatars offset the seriousness of dark UI.",
+    "motion": "Interactions feel smooth and weighted—cards slide, states fade, buttons compress slightly on press. Nothing snaps instantaneously.",
+    "touch": "Minimum 44×44px touch targets. Primary actions and bet controls live in the bottom 35–40% of the screen for one-handed reach."
+  },
+
+  "color": {
+    "palette": {
+      "background": {
+        "base": {
+          "hex": "#000000",
+          "usage": "Full-bleed app canvas, gameplay backdrop, marketing phone chrome"
+        },
+        "elevated": {
+          "hex": "#0A0A0A",
+          "usage": "Subtle lift from pure black; modal scrims"
+        },
+        "surface": {
+          "hex": "#1C1C1E",
+          "usage": "Action buttons, player info modules, secondary containers, bottom toolbars"
+        },
+        "surfaceRaised": {
+          "hex": "#2C2C2E",
+          "usage": "Pressed/hover states, nested wells, slider tracks"
+        },
+        "surfaceOverlay": {
+          "hex": "#3A3A3C",
+          "usage": "Disabled controls, inactive card backs pattern base"
+        }
+      },
+      "text": {
+        "primary": {
+          "hex": "#FFFFFF",
+          "usage": "Headlines, balances, player names, card ranks, active button labels"
+        },
+        "secondary": {
+          "hex": "#8E8E93",
+          "usage": "Sub-labels ('Buy-in', 'Your rank'), seat metadata, section captions"
+        },
+        "tertiary": {
+          "hex": "#636366",
+          "usage": "Placeholders, disabled labels, tick marks"
+        },
+        "inverse": {
+          "hex": "#000000",
+          "usage": "Text on white playing-card faces"
+        }
+      },
+      "accent": {
+        "note": "Offsuit avoids a single neon brand color. Accents appear as soft multi-stop gradients and saturated 3D rank icons—not flat UI fills.",
+        "gradientPastel": {
+          "name": "Feature Card Gradient",
+          "type": "linear",
+          "angle": "135deg",
+          "stops": [
+            { "color": "#E8D5FF", "position": "0%", "note": "Lavender" },
+            { "color": "#FFF3C4", "position": "45%", "note": "Soft yellow" },
+            { "color": "#FFD6E0", "position": "100%", "note": "Pale pink" }
+          ],
+          "usage": "Room/feature cards (e.g. 'Dave's Garage'), promotional modules"
+        },
+        "gradientMarketing": {
+          "name": "Hero Backdrop Gradient",
+          "type": "linear",
+          "angle": "145deg",
+          "stops": [
+            { "color": "#A8D8EA", "position": "0%", "note": "Pale sky blue / cyan" },
+            { "color": "#F5F5F0", "position": "45%", "note": "Off-white center" },
+            { "color": "#F5C4A8", "position": "100%", "note": "Warm peach / muted orange" }
+          ],
+          "usage": "Marketing pages, app-store hero backgrounds—not in-app gameplay"
+        }
+      },
+      "semantic": {
+        "success": { "hex": "#34C759", "usage": "Wins, positive deltas (iOS-style green)" },
+        "danger": { "hex": "#FF3B30", "usage": "Fold, losses—used sparingly" },
+        "warning": { "hex": "#FF9500", "usage": "Timers, caution" },
+        "info": { "hex": "#007AFF", "usage": "Links, informational highlights" }
+      },
+      "poker": {
+        "tableFelt": {
+          "hex": "#000000",
+          "note": "Table is essentially black void; players and cards float on the canvas"
+        },
+        "potLabel": { "hex": "#8E8E93" },
+        "potAmount": { "hex": "#FFFFFF" },
+        "cardFace": { "hex": "#FFFFFF" },
+        "cardBackPattern": {
+          "base": "#F2F2F7",
+          "stripe": "#C7C7CC",
+          "note": "Diagonal stripe pattern on face-down cards"
+        },
+        "suitRed": { "hex": "#FF3B30" },
+        "suitBlack": { "hex": "#1C1C1E" }
+      },
+      "rankIcons": {
+        "note": "3D-rendered, high-saturation mascot icons for player ranks",
+        "examples": [
+          { "name": "Fish", "colors": ["#5AC8FA", "#007AFF"] },
+          { "name": "Duck", "colors": ["#FFD60A", "#FF9500"] }
+        ]
+      },
+      "border": {
+        "subtle": { "hex": "#38383A", "width": "1px" },
+        "default": { "hex": "#48484A", "width": "1px" },
+        "onDark": { "hex": "#FFFFFF", "opacity": 0.08, "width": "1px", "usage": "Inner highlight on dark buttons" }
+      }
+    },
+    "gradients": {
+      "featureCard": {
+        "ref": "color.accent.gradientPastel",
+        "overlay": "Optional white scrim at 10% opacity for text legibility"
+      },
+      "glassCard": {
+        "type": "linear",
+        "angle": "180deg",
+        "stops": [
+          { "color": "#FFFFFF", "opacity": 0.06, "position": "0%" },
+          { "color": "#FFFFFF", "opacity": 0.02, "position": "100%" }
+        ],
+        "usage": "Subtle glass lift on dark modules over black"
+      }
+    },
+    "rules": {
+      "backgroundUsage": "In-app screens are always pure black. Pastel/marketing gradients never bleed into the live table.",
+      "accentRestraint": "Reserve saturated color for avatars, rank badges, and one hero card per screen. Action buttons stay neutral dark grey.",
+      "cardContrast": "Playing cards are always white-faced—they are the brightest elements on the gameplay screen."
+    }
+  },
+
+  "typography": {
+    "fontFamilies": {
+      "primary": {
+        "preferred": ["SF Pro Display", "SF Pro Text", "Inter", "-apple-system", "BlinkMacSystemFont", "system-ui"],
+        "character": "Clean geometric humanist sans. Apple-native feel. No decorative or condensed display faces."
+      },
+      "numeric": {
+        "preferred": ["SF Pro Rounded", "Inter", "system-ui"],
+        "character": "Chip counts and balances. Slightly softer numeral terminals than body text.",
+        "features": ["tabular-nums", "lining-nums"]
+      },
+      "card": {
+        "preferred": ["Georgia", "Times New Roman", "serif"],
+        "character": "Corner ranks on playing cards only—classic card typography for readability at small size"
+      }
+    },
+    "pairings": [
+      {
+        "name": "Marketing Hero",
+        "headline": {
+          "family": "primary",
+          "size": 40,
+          "weight": 500,
+          "letterSpacing": "-0.03em",
+          "lineHeight": 1.1,
+          "color": "text.primary",
+          "textTransform": "none",
+          "example": "Casual poker,\nredesigned."
+        },
+        "subhead": {
+          "family": "primary",
+          "size": 17,
+          "weight": 400,
+          "letterSpacing": "-0.01em",
+          "color": "text.secondary"
+        }
+      },
+      {
+        "name": "Hero Balance",
+        "label": {
+          "family": "primary",
+          "size": 13,
+          "weight": 400,
+          "color": "text.secondary",
+          "example": "Buy-in"
+        },
+        "amount": {
+          "family": "numeric",
+          "size": 34,
+          "weight": 400,
+          "letterSpacing": "-0.02em",
+          "color": "text.primary",
+          "example": "11,250"
+        }
+      },
+      {
+        "name": "Feature Card",
+        "title": {
+          "family": "primary",
+          "size": 17,
+          "weight": 600,
+          "color": "#1C1C1E",
+          "note": "Dark text on pastel gradient background"
+        },
+        "meta": {
+          "family": "primary",
+          "size": 13,
+          "weight": 400,
+          "color": "#636366"
+        }
+      },
+      {
+        "name": "Section Label",
+        "label": {
+          "family": "primary",
+          "size": 13,
+          "weight": 600,
+          "letterSpacing": "0.02em",
+          "textTransform": "none",
+          "color": "text.secondary",
+          "example": "Your rank"
+        }
+      },
+      {
+        "name": "List Row",
+        "primary": {
+          "family": "primary",
+          "size": 15,
+          "weight": 500,
+          "color": "text.primary"
+        },
+        "secondary": {
+          "family": "primary",
+          "size": 13,
+          "weight": 400,
+          "color": "text.secondary"
+        }
+      },
+      {
+        "name": "Player Seat",
+        "name": {
+          "family": "primary",
+          "size": 12,
+          "weight": 500,
+          "color": "text.primary"
+        },
+        "stack": {
+          "family": "numeric",
+          "size": 13,
+          "weight": 600,
+          "color": "text.primary"
+        }
+      },
+      {
+        "name": "Action Button",
+        "label": {
+          "family": "primary",
+          "size": 15,
+          "weight": 600,
+          "letterSpacing": "-0.01em",
+          "textTransform": "none",
+          "color": "text.primary",
+          "example": "Call 10"
+        }
+      },
+      {
+        "name": "Bet Amount Display",
+        "value": {
+          "family": "numeric",
+          "size": 32,
+          "weight": 600,
+          "letterSpacing": "-0.02em",
+          "color": "text.primary"
+        },
+        "caption": {
+          "family": "primary",
+          "size": 10,
+          "weight": 500,
+          "letterSpacing": "0.06em",
+          "textTransform": "uppercase",
+          "color": "text.secondary"
+        }
+      }
+    ],
+    "scale": {
+      "xs": { "size": 10, "lineHeight": 14, "usage": "Legal, tick labels, bet size caption" },
+      "sm": { "size": 12, "lineHeight": 16, "usage": "Seat names, metadata" },
+      "base": { "size": 15, "lineHeight": 20, "usage": "Body, button labels, list items" },
+      "md": { "size": 17, "lineHeight": 22, "usage": "Feature card titles, emphasized body" },
+      "lg": { "size": 22, "lineHeight": 28, "usage": "Screen section headers" },
+      "xl": { "size": 28, "lineHeight": 34, "usage": "Secondary hero text" },
+      "2xl": { "size": 34, "lineHeight": 40, "usage": "Primary balance, pot amount" },
+      "3xl": { "size": 40, "lineHeight": 44, "usage": "Marketing headline" }
+    },
+    "rules": {
+      "case": "Sentence case everywhere. No uppercase button labels—Offsuit uses 'Call 10' not 'CALL 10'.",
+      "letterSpacing": "Tighten headlines and large numbers (-0.02 to -0.03em). Body text uses default or slightly tight tracking.",
+      "numerals": "Comma-separate thousands (11,250). Tabular alignment for chip counts in columns.",
+      "weight": "Prefer medium (500) and semibold (600) over bold (700+). The brand voice is calm, not shouty."
+    }
+  },
+
+  "spacing": {
+    "baseUnit": 4,
+    "scale": {
+      "0": 0,
+      "1": 4,
+      "2": 8,
+      "3": 12,
+      "4": 16,
+      "5": 20,
+      "6": 24,
+      "8": 32,
+      "10": 40,
+      "12": 48,
+      "16": 64,
+      "20": 80
+    },
+    "layout": {
+      "screenPaddingX": 20,
+      "screenPaddingTop": 16,
+      "screenPaddingBottom": 24,
+      "sectionGap": 32,
+      "cardGap": 12,
+      "cardPadding": 20,
+      "cardPaddingCompact": 16,
+      "listItemGap": 12,
+      "listItemPaddingY": 14,
+      "inlineGap": 8,
+      "chipGap": 8
+    },
+    "gameplay": {
+      "tableMarginTop": 12,
+      "tableMaxHeightRatio": 0.55,
+      "avatarRowGap": 16,
+      "boardCardGap": 6,
+      "heroCardOverlap": -8,
+      "actionBarPadding": 16,
+      "actionBarGap": 10,
+      "actionButtonGap": 8,
+      "betControlZoneHeight": 120,
+      "note": "Bottom zone stacks: action pills → bet adjuster → player hand chip stack"
+    },
+    "home": {
+      "balanceToFeatureGap": 24,
+      "featureToRankGap": 32,
+      "rankListBottomInset": 16
+    }
+  },
+
+  "radius": {
+    "none": 0,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 20,
+    "2xl": 24,
+    "3xl": 28,
+    "pill": 9999,
+    "usage": {
+      "playingCards": "md to lg (12–16px)— noticeably softer than standard playing cards",
+      "actionButtons": "pill (full stadium shape)",
+      "featureCards": "2xl (24px)",
+      "playerModules": "xl (20px)",
+      "avatars": "pill (perfect circle)",
+      "betAdjusterButton": "pill (circle)",
+      "inputs": "lg",
+      "phoneFrame": "3xl (marketing mockups only)"
+    },
+    "principle": "When in doubt, round more. Offsuit's signature is the squircle—generous curves on every interactive element."
+  },
+
+  "elevation": {
+    "levels": {
+      "0": {
+        "shadow": "none",
+        "usage": "Flat black canvas, table void"
+      },
+      "1": {
+        "shadow": "0 2px 8px rgba(0, 0, 0, 0.35)",
+        "usage": "Playing cards on table"
+      },
+      "2": {
+        "shadow": "0 4px 16px rgba(0, 0, 0, 0.45)",
+        "usage": "Feature cards, player info modules"
+      },
+      "3": {
+        "shadow": "0 8px 32px rgba(0, 0, 0, 0.55)",
+        "usage": "Floating overlays, expanded bet picker"
+      }
+    },
+    "inner": {
+      "darkButton": {
+        "boxShadow": "inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+        "usage": "Top highlight on charcoal action buttons"
+      },
+      "cardFace": {
+        "boxShadow": "inset 0 -1px 0 rgba(0, 0, 0, 0.04)",
+        "usage": "Subtle depth on white card faces"
+      }
+    },
+    "principle": "No neon glows. Depth is achieved through soft black shadows and 1px inner highlights—not colored halos."
+  },
+
+  "components": {
+    "brandMark": {
+      "wordmark": {
+        "text": "offsuit",
+        "case": "lowercase",
+        "typography": { "family": "primary", "weight": 600, "size": 18, "letterSpacing": "-0.02em" },
+        "color": "text.primary"
+      },
+      "icon": {
+        "description": "Stylized sun/spark burst mark",
+        "placement": "Left of wordmark",
+        "color": "text.primary"
+      }
+    },
+
+    "homeScreen": {
+      "structure": [
+        "Status bar (system)",
+        "Hero balance block (label + large number, centered-left)",
+        "Feature card (pastel gradient, room/game info, house icon)",
+        "Rank section header",
+        "Rank list rows (3D icon + label + value)",
+        "Bottom safe area"
+      ],
+      "balanceBlock": {
+        "alignment": "Left-aligned within screen padding",
+        "labelToAmountGap": 4
+      },
+      "featureCard": {
+        "minHeight": 120,
+        "background": "color.accent.gradientPastel",
+        "radius": "radius.2xl",
+        "padding": "spacing.layout.cardPadding",
+        "iconSize": 20,
+        "shadow": "elevation.levels.2"
+      }
+    },
+
+    "gameplayScreen": {
+      "structure": [
+        "Opponent avatar row (horizontal, top)",
+        "Community card row (centered)",
+        "Hero hole cards (bottom-left, overlapping)",
+        "Hero info module (bottom-right: avatar + stack + current bet)",
+        "Action pills (bottom-right cluster: Call, Raise, bet adjuster)",
+        "Optional pot display (center, above board)"
+      ],
+      "informationPriority": [
+        "Community cards",
+        "Your hole cards",
+        "Action buttons",
+        "Opponent stacks",
+        "Pot size"
+      ]
+    },
+
+    "playingCard": {
+      "aspectRatio": "2:3",
+      "width": { "sm": 36, "md": 48, "lg": 56 },
+      "face": {
+        "background": "poker.cardFace",
+        "radius": "radius.md",
+        "shadow": "elevation.levels.1",
+        "rank": {
+          "family": "card",
+          "weight": 700,
+          "color": { "red": "poker.suitRed", "black": "poker.suitBlack" }
+        },
+        "suit": {
+          "size": "proportional to card width",
+          "color": { "red": "poker.suitRed", "black": "poker.suitBlack" }
+        }
+      },
+      "back": {
+        "background": "poker.cardBackPattern.base",
+        "pattern": "Diagonal grey stripes on off-white",
+        "radius": "radius.md",
+        "border": "1px solid rgba(0,0,0,0.06)"
+      },
+      "layout": {
+        "heroHand": "Two cards fanned/overlapping at bottom-left",
+        "board": "Up to five cards in centered horizontal row, small gap",
+        "faceDown": "Grey stripe pattern visible"
+      }
+    },
+
+    "avatar": {
+      "style": "3D-rendered Memoji-style characters",
+      "sizes": {
+        "opponent": 40,
+        "hero": 48,
+        "listRow": 32
+      },
+      "shape": "circle",
+      "border": {
+        "default": "none",
+        "active": "2px solid #FFFFFF at 30% opacity"
+      },
+      "label": {
+        "position": "Below avatar, centered",
+        "nameTypography": "typography.pairings.Player Seat.name",
+        "stackTypography": "typography.pairings.Player Seat.stack"
+      },
+      "principle": "Avatars inject personality into an otherwise monochrome UI. They are the primary color carriers during gameplay."
+    },
+
+    "actionButton": {
+      "description": "Dark charcoal pills—neutral, not colored by action type",
+      "layout": "Horizontal cluster at bottom-right of gameplay screen",
+      "variants": {
+        "call": {
+          "label": "Call {amount}",
+          "example": "Call 10"
+        },
+        "raise": {
+          "label": "Raise {amount}",
+          "example": "Raise 20"
+        }
+      },
+      "anatomy": {
+        "height": 44,
+        "minWidth": 88,
+        "paddingX": 20,
+        "background": "background.surface",
+        "radius": "radius.pill",
+        "typography": "typography.pairings.Action Button.label",
+        "shadow": "elevation.inner.darkButton",
+        "pressScale": 0.97
+      },
+      "note": "Fold/check are not visible in reference—likely contextual or in overflow. When present, use same neutral pill style or a text-only ghost variant."
+    },
+
+    "betAdjuster": {
+      "description": "Compact circular control adjacent to Raise button—entry point for bet-size adjustment",
+      "anatomy": {
+        "shape": "circle",
+        "diameter": 44,
+        "background": "background.surface",
+        "icon": {
+          "type": "chevron-up",
+          "strokeWidth": 2,
+          "color": "text.primary",
+          "size": 18
+        },
+        "position": "Immediately right of Raise pill, same baseline"
+      },
+      "expandedState": {
+        "description": "Tapping Raise or the adjuster likely reveals a vertical slider, stepper, or overlay—not visible in static reference",
+        "recommendedPattern": {
+          "valueDisplay": "Large numeric readout above controls",
+          "track": {
+            "orientation": "horizontal or vertical",
+            "height": 3,
+            "background": "background.surfaceRaised",
+            "fill": "text.primary",
+            "radius": "pill"
+          },
+          "thumb": {
+            "diameter": 28,
+            "background": "#FFFFFF",
+            "shadow": "elevation.levels.2"
+          },
+          "steppers": {
+            "shape": "circle",
+            "diameter": 44,
+            "background": "background.surface",
+            "iconColor": "text.primary"
+          }
+        }
+      }
+    },
+
+    "playerInfoModule": {
+      "description": "Dark rounded container for hero stack and current bet",
+      "anatomy": {
+        "background": "background.surface",
+        "radius": "radius.xl",
+        "padding": 12,
+        "layout": "Avatar + stack amount + bet amount",
+        "position": "Bottom-right of gameplay screen"
+      },
+      "example": { "stack": "250", "avatar": "Hero Memoji" }
+    },
+
+    "rankListRow": {
+      "anatomy": {
+        "height": 52,
+        "layout": "3D rank icon (left) + label (center-left) + value (right)",
+        "iconSize": 28,
+        "separator": "None or 1px subtle border between rows",
+        "typography": "typography.pairings.List Row"
+      }
+    },
+
+    "featureCard": {
+      "anatomy": {
+        "background": "color.accent.gradientPastel",
+        "radius": "radius.2xl",
+        "padding": 20,
+        "icon": "Small line icon (house) top-left",
+        "titleTypography": "typography.pairings.Feature Card.title",
+        "metaTypography": "typography.pairings.Feature Card.meta"
+      },
+      "example": {
+        "title": "Dave's Garage",
+        "meta": "5 players · $10 buy-in"
+      }
+    }
+  },
+
+  "screens": {
+    "marketingHero": {
+      "layout": "Two phone mockups angled on pastel gradient backdrop",
+      "headline": "Casual poker, redesigned.",
+      "headlinePosition": "Top-left, outside phone frames",
+      "phones": {
+        "left": "Home/lobby screen",
+        "right": "Live gameplay screen"
+      },
+      "storeBadges": "App Store + Google Play, bottom-right corner"
+    },
+    "home": {
+      "ref": "components.homeScreen"
+    },
+    "gameplay": {
+      "ref": "components.gameplayScreen"
+    }
+  },
+
+  "iconography": {
+    "style": "Minimal line icons for UI chrome (house, chevron, settings). 3D rendered mascots for ranks and avatars.",
+    "strokeWeight": 1.5,
+    "sizes": { "sm": 16, "md": 20, "lg": 24 },
+    "color": {
+      "onDark": "text.primary",
+      "onPastel": "#1C1C1E",
+      "inactive": "text.secondary"
+    }
+  },
+
+  "motion": {
+    "duration": {
+      "instant": 80,
+      "fast": 150,
+      "normal": 300,
+      "slow": 450,
+      "dramatic": 700
+    },
+    "easing": {
+      "default": "cubic-bezier(0.25, 0.1, 0.25, 1)",
+      "spring": "cubic-bezier(0.34, 1.2, 0.64, 1)",
+      "easeOut": "cubic-bezier(0, 0, 0.2, 1)",
+      "easeInOut": "cubic-bezier(0.4, 0, 0.6, 1)"
+    },
+    "patterns": {
+      "buttonPress": { "scale": 0.97, "duration": 80 },
+      "cardDeal": { "type": "slide + fade + slight rotate", "duration": 450, "stagger": 100 },
+      "cardFlip": { "type": "rotateY", "duration": 350 },
+      "chipToPot": { "type": "arc translate", "duration": 400 },
+      "screenEnter": { "type": "fade + translateY(8px)", "duration": 300 },
+      "betAdjusterExpand": { "type": "height expand + fade", "duration": 250 },
+      "sliderThumbDrag": { "type": "scale(1.05)", "duration": 75 },
+      "avatarIdle": { "type": "subtle bob", "duration": 3000, "loop": true, "optional": true }
+    },
+    "gameplayPacing": {
+      "aiThinkDelay": { "min": 600, "max": 1000 },
+      "streetRevealPause": 800,
+      "betweenActions": 350,
+      "note": "Paced but not sluggish—Offsuit feels smooth, not casino-fast"
+    }
+  },
+
+  "texture": {
+    "backgroundNoise": {
+      "opacity": 0,
+      "note": "Offsuit uses flat pure black—no grain on gameplay canvas"
+    },
+    "cardBackStripe": {
+      "pattern": "Repeating diagonal lines, 45deg",
+      "colors": ["#F2F2F7", "#C7C7CC"]
+    }
+  },
+
+  "accessibility": {
+    "minTouchTarget": 44,
+    "focusRing": "2px solid #FFFFFF, offset 2px",
+    "reducedMotion": "Replace card deal animations with instant placement; keep button press feedback",
+    "contrastNote": "White on #1C1C1E passes WCAG AA. Grey secondary text (#8E8E93) on black alone may fail—always place on a surface."
+  },
+
+  "antiPatterns": {
+    "avoid": [
+      "Neon lime or high-saturation accent on action buttons",
+      "Uppercase tracked button labels",
+      "Green felt table with rail—Offsuit table is a black void",
+      "Dense data tables on gameplay screen",
+      "Sharp-cornered cards or buttons",
+      "Flat emoji avatars—use 3D rendered characters",
+      "Horizontal neon slider with glow (WESGO style)—Offsuit bet control is subtle and compact"
+    ]
+  },
+
+  "implementationMapping": {
+    "note": "Suggested tokens for integrating this blueprint into the poker-trainer codebase",
+    "cssVariables": {
+      "--bg-base": "#000000",
+      "--bg-surface": "#1C1C1E",
+      "--bg-surface-raised": "#2C2C2E",
+      "--text-primary": "#FFFFFF",
+      "--text-secondary": "#8E8E93",
+      "--text-tertiary": "#636366",
+      "--radius-card": "16px",
+      "--radius-button": "9999px",
+      "--radius-module": "20px",
+      "--shadow-card": "0 2px 8px rgba(0, 0, 0, 0.35)",
+      "--shadow-module": "0 4px 16px rgba(0, 0, 0, 0.45)",
+      "--font-primary": "SF Pro Text, Inter, -apple-system, system-ui, sans-serif",
+      "--font-numeric": "SF Pro Rounded, Inter, system-ui, sans-serif",
+      "--gradient-feature": "linear-gradient(135deg, #E8D5FF 0%, #FFF3C4 45%, #FFD6E0 100%)"
+    },
+    "tailwindExtend": {
+      "colors": {
+        "surface": {
+          "DEFAULT": "#1C1C1E",
+          "raised": "#2C2C2E",
+          "overlay": "#3A3A3C"
+        },
+        "offsuit": {
+          "black": "#000000",
+          "grey": "#8E8E93"
+        }
+      },
+      "borderRadius": {
+        "card": "16px",
+        "module": "20px"
+      },
+      "boxShadow": {
+        "card": "0 2px 8px rgba(0, 0, 0, 0.35)",
+        "module": "0 4px 16px rgba(0, 0, 0, 0.45)"
+      }
+    },
+    "migrationFromCurrent": {
+      "note": "Current poker-trainer uses slate-900/amber palette. Key shifts to match Offsuit:",
+      "replacements": [
+        { "from": "bg-slate-900", "to": "bg-black (#000000)" },
+        { "from": "bg-slate-800 action buttons", "to": "bg-[#1C1C1E] pill buttons" },
+        { "from": "amber-400/500 accents", "to": "white primary / pastel gradient feature cards only" },
+        { "from": "green felt table", "to": "black void table—cards and avatars float" },
+        { "from": "uppercase action labels", "to": "sentence case ('Call 10', 'Raise 20')" },
+        { "from": "horizontal neon bet slider", "to": "compact adjuster + expanded stepper overlay" }
+      ]
+    }
+  }
+}
