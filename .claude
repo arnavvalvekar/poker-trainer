@@ -1,0 +1,751 @@
+# Poker Trainer - AI Context File
+
+## Project Overview
+
+**Poker Trainer** is a 6-max Texas Hold'em training application built as a Progressive Web App. It simulates full poker hands against GTO-informed AI opponents and provides post-hand coaching feedback with EV analysis, GTO alignment scoring, position analysis, and opponent tendency exploitation tips.
+
+**Tech Stack:**
+- React 18 + TypeScript 5.6
+- Vite 5.4 (build tool)
+- Zustand (state management)
+- Tailwind CSS (with custom "Offsuit" design system)
+- Recharts (statistics visualization)
+- Vitest (testing)
+- Web Workers (EV simulation)
+- IndexedDB (hand history persistence)
+
+**Key Features:**
+- Full 6-max No-Limit Hold'em gameplay with realistic betting rounds
+- GTO-based AI opponents with personality profiles and tilt mechanics
+- Comprehensive post-hand feedback with Monte Carlo EV simulation
+- Stats dashboard with charts and position analysis
+- Hand history review system
+- PWA with offline support
+
+---
+
+## Architecture Overview
+
+### Layered Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  UI Layer (React components)                            │
+│  AppShell → PokerTable / StatsDashboard / HandReview    │
+└────────────────────┬────────────────────────────────────┘
+                     │ useGameStore()
+┌────────────────────▼────────────────────────────────────┐
+│  Orchestration Layer (Zustand game-store.ts)            │
+│  Async flows, animations, persistence, feedback         │
+└─────┬──────────────┬──────────────┬─────────────────────┘
+      │              │              │
+┌─────▼─────┐  ┌─────▼─────┐  ┌────▼──────────────┐
+│ GameEngine│  │ Feedback  │  │ Storage           │
+│ (pure TS) │  │ pipeline  │  │ IndexedDB + LS    │
+└───────────┘  └───────────┘  └───────────────────┘
+```
+
+### Design Patterns
+
+- **Single Store Pattern**: One Zustand store (`useGameStore`) handles all application state
+- **Domain Engine Separation**: `GameEngine` is a pure TypeScript class with no React dependencies
+- **Singleton Module State**: Shared instances like `opponentTracker`, GTO range cache, EV worker
+- **Module-level Lock**: `processingLock` prevents concurrent action processing
+- **Lazy Loading**: Stats and Review tabs loaded on-demand via `React.lazy`
+- **Web Worker Pattern**: Monte Carlo EV simulation runs off main thread
+- **View-based Routing**: Internal state-based navigation (no React Router)
+- **PWA/Offline-First**: Service worker with cached GTO data
+
+---
+
+## Directory Structure
+
+```
+src/
+├── main.tsx                    # Entry point: settings init, SW registration
+├── App.tsx                     # Thin wrapper → AppShell
+├── index.css                   # Tailwind + design tokens + animations
+│
+├── types/
+│   └── poker.ts                # ALL domain types (Card, Player, GameState, etc.)
+│
+├── store/
+│   └── game-store.ts           # Single Zustand store (420 lines, orchestration)
+│
+├── engine/                     # Pure poker logic (framework-agnostic)
+│   ├── game-engine.ts          # Main state machine
+│   ├── action-validator.ts     # Valid actions + validation
+│   ├── hand-evaluator.ts       # 5-card hand ranking algorithm
+│   ├── deck.ts                 # Deck creation, shuffle, deal
+│   ├── pot.ts                  # Side pot calculation
+│   ├── positions.ts            # Seat positions, action order
+│   └── __tests__/
+│
+├── ai/                         # AI opponent decision-making
+│   ├── decision-engine.ts      # Preflop/postflop AI logic
+│   ├── profiles.ts             # Personality + tilt mechanics
+│   └── range-lookup.ts         # GTO range JSON loader
+│
+├── feedback/                   # Post-hand coaching system
+│   ├── feedback-engine.ts      # Orchestrates per-decision analysis
+│   ├── feedback-copy.ts        # Human-readable feedback UI text
+│   ├── gto-lookup.ts           # GTO alignment scoring
+│   ├── position-analysis.ts    # Hand strength vs position thresholds
+│   ├── opponent-tracker.ts     # VPIP/PFR/3-bet/c-bet tracking
+│   ├── ev-client.ts            # Web Worker client
+│   ├── ev-simulator.worker.ts  # Monte Carlo EV simulation (2000 runs)
+│   └── __tests__/
+│
+├── storage/                    # Persistence layer
+│   ├── db.ts                   # IndexedDB wrapper
+│   ├── hand-history.ts         # Hand persist/load API
+│   └── settings.ts             # localStorage settings
+│
+├── utils/
+│   ├── hand-notation.ts        # Card → "AKs" notation, 169-hand ranking
+│   ├── range-expansion.ts      # Range string expansion (for tests)
+│   ├── situation-hash.ts       # Situation fingerprinting (unused)
+│   ├── seat-layout.ts          # Oval table layout (legacy, unused)
+│   ├── format.ts               # Money/action formatting
+│   ├── action-describe.ts      # Action banner text generation
+│   ├── timing.ts               # Animation delay constants
+│   └── __tests__/
+│
+└── components/                 # 17 React components
+    ├── AppShell.tsx            # Root layout + bottom tab nav
+    ├── PokerTable.tsx          # Main play view
+    ├── HeroZone.tsx            # Hero cards + stack display
+    ├── OpponentSeat.tsx        # Opponent row (active UI)
+    ├── PlayerSeat.tsx          # Oval-table seat (LEGACY, unused)
+    ├── PlayingCard.tsx         # SVG card component with animations
+    ├── ChipStack.tsx           # Bet chip visualization
+    ├── PotDisplay.tsx          # Pot + BoardCards
+    ├── ActionButtons.tsx       # Hero action UI (fold/check/call/raise)
+    ├── BetSlider.tsx           # Bet size slider
+    ├── ActionLog.tsx           # Street-grouped action history
+    ├── ActionBanner.tsx        # Floating action toast
+    ├── HandResultBanner.tsx    # Showdown summary
+    ├── FeedbackPanel.tsx       # Coaching cards
+    ├── HandHistoryPanel.tsx    # Slide-over history drawer
+    ├── HandReview.tsx          # Review tab (lazy loaded)
+    └── StatsDashboard.tsx      # Stats tab (lazy loaded, uses Recharts)
+```
+
+---
+
+## Core Concepts & Domain Model
+
+### Card System
+- **Card**: Template literal type `\`${Rank}${Suit}\`` (e.g., `"As"`, `"Th"`)
+- **Ranks**: `2-9`, `T`, `J`, `Q`, `K`, `A`
+- **Suits**: `s` (spades), `h` (hearts), `d` (diamonds), `c` (clubs)
+
+### Positions (6-max)
+`UTG` → `HJ` → `CO` → `BTN` → `SB` → `BB`
+
+### Streets
+`preflop` → `flop` → `turn` → `river` → `showdown`
+
+### Key Domain Types (`types/poker.ts`)
+
+**Player**
+- id, name, position, stack, holeCards
+- isHero, isAI, folded, allIn
+- betThisStreet, totalBetThisHand
+
+**GameState**
+- handNumber, phase, street
+- players (array of 6), board, pots
+- actions (full history)
+- dealerIndex, currentPlayerIndex
+- currentBet, minRaise, lastAggressorIndex
+- config (blinds, stacks)
+
+**GameAction**
+- playerId, action (`fold`/`check`/`call`/`bet`/`raise`/`all-in`), amount
+- street, timestamp
+
+**ValidActions**
+- Boolean flags: canFold, canCheck, canCall, canBet, canRaise
+- Amounts: callAmount, minBet, maxBet, minRaise, maxRaise
+
+**HandHistoryEntry**
+- UI metadata: handId, timestamp, result, heroPosition, heroCards, board
+- heroStartStack, heroEndStack, profitLoss, aiPlayers
+
+**StoredHand** (extends HandHistoryEntry)
+- Adds: feedback array (DecisionFeedback[])
+
+**SessionStats**
+- Aggregated: handsPlayed, handsWon/Lost/Split
+- winRate, totalProfit, avgPotSize, avgDecisionAccuracy
+- positionalStats (by position)
+
+---
+
+## State Management (Zustand)
+
+### Single Store: `useGameStore`
+
+**State Shape:**
+```typescript
+{
+  // Core game state
+  engine: GameEngine              // Pure TS state machine
+  state: GameState                // Current snapshot
+  lastSummary: HandSummary | null // Showdown results
+  heroStartStack: number          // For P&L calculation
+  
+  // History & feedback
+  handHistory: HandHistoryEntry[] // In-memory last 50 hands
+  storedHands: StoredHand[]       // From IndexedDB
+  lastFeedback: DecisionFeedback[] | null
+  
+  // UI state
+  view: 'play' | 'stats' | 'review'
+  message: string                 // Header status text
+  showHistory: boolean            // Drawer open
+  isAnalyzing: boolean            // Feedback loading
+  isAnimating: boolean            // Visual animations
+  actionBanner: ActionBannerState | null
+  visibleBoardCount: number       // Progressive reveal
+  reviewHandId: string | null     // Selected review hand
+  
+  // Config
+  settings: AppSettings
+  gtoLoaded: boolean
+}
+```
+
+**Key Actions:**
+- `init()` - Load GTO ranges, IndexedDB, initialize engine
+- `startHand()` - Deal new hand, process AI until hero's turn
+- `playerAction(action, amount)` - Hero acts, continue AI processing
+- `processAI()` - Recursive AI turn processing with delays
+- `toggleHistory()` - Open/close history drawer
+- `selectHistoryHand(id)` - Load hand for review
+- `setView(view)` - Navigate between tabs
+- `setReviewHand(id)` - Switch to review tab with specific hand
+- `updateSettings(settings)` - Save to localStorage
+- `getStats()` - Compute session statistics (not reactive)
+
+**Important Implementation Details:**
+- **Processing Lock**: Module-level `processingLock` boolean prevents concurrent hand/action processing
+- **Direct State Access**: Components use `useGameStore.getState()` in handlers to avoid stale closures
+- **No Middleware**: No persist, devtools, or slices
+- **Async Flows**: AI delays, animation sequencing, feedback generation all in store
+
+---
+
+## Data Flow (One Hand)
+
+```
+1. User clicks "Deal Hand"
+   └→ startHand()
+      └→ engine.startNewHand() - Creates new GameState
+         └→ Deal cards, assign positions, post blinds
+            └→ processAI() loop
+               └→ AI opponents act until hero's turn
+                  └→ Updates: message, actionBanner, state
+
+2. Hero acts via ActionButtons
+   └→ playerAction(action, amount)
+      └→ engine.applyAction() - Validates & mutates state
+         └→ Street advances or showdown triggered
+            └→ Continue processAI() loop
+
+3. Showdown reached
+   └→ finishHand()
+      └→ opponentTracker.processHand() - Update stats
+         └→ analyzeHandDecisions() - Generate feedback
+            ├→ EV worker (Monte Carlo)
+            ├→ GTO alignment lookup
+            ├→ Position analysis
+            └→ Opponent tendency tips
+         └→ persistHand() - Save to IndexedDB
+            └→ Update: lastFeedback, handHistory, storedHands
+
+4. User clicks "Deal Hand" again
+   └→ Loop to step 1
+```
+
+---
+
+## AI System
+
+### Preflop AI (`ai/decision-engine.ts`)
+
+1. **Scenario Detection**: Position + facing action → scenario key
+   - Examples: `UTG_open`, `BB_vs_open`, `CO_3bet`, `BTN_vs_3bet`
+
+2. **GTO Range Lookup**: `/gto-ranges/6max-preflop.json`
+   - Check if hand is in range
+   - Get action frequencies: fold/call/raise weights
+
+3. **Variance**: 8% random deviation (`VARIANCE_RATE`)
+
+4. **Stack Adjustments**:
+   - <25BB: more shove/fold
+   - <40BB: reduce complex plays
+   - >80BB: enable deeper stacks
+
+5. **Personality Modifier**: Profile affects tightness & aggression
+
+6. **Tilt**: After losing hands, more aggressive/loose
+
+### Postflop AI
+
+1. **Hand Strength**: Normalize current hand rank to 0-1 scale
+2. **GTO Action Frequencies**: `default_cbet`, `default_defense` scenarios
+3. **Weighted Sampling**: Apply personality + tilt modifiers
+4. **Action Selection**: Pick fold/call/raise with sizing
+
+### AI Profiles (`ai/profiles.ts`)
+
+5 distinct AI opponents with unique personalities:
+- **Alex**: Tight-aggressive (TAG)
+- **Blake**: Loose-aggressive (LAG)
+- **Casey**: Tight-passive
+- **Drew**: Balanced GTO
+- **Ellis**: Wild/unpredictable
+
+Each profile has: `tightness` (0-1), `aggression` (0-1), `tilt` (loss streak tracker)
+
+---
+
+## Feedback System
+
+### Four-Part Analysis (`feedback/feedback-engine.ts`)
+
+For each hero decision:
+
+**1. EV Simulation** (`ev-simulator.worker.ts`)
+- 2000 Monte Carlo simulations in Web Worker
+- Complete random boards, deal random opponent hands
+- Compare best 5-card hands
+- Output: foldEV (0), callEV, betEV with best action
+
+**2. GTO Alignment** (`gto-lookup.ts`)
+- Check if hand in GTO range for scenario
+- Compare action taken vs GTO frequencies
+- Score: `inRange ? freq * actionMatch : (fold ? 0.8 : 0.2)`
+
+**3. Position Analysis** (`position-analysis.ts`)
+- 169-hand ranking system
+- Position-specific thresholds (UTG strictest, BTN widest)
+- Compare hand rank vs threshold
+
+**4. Opponent Exploitation** (`opponent-tracker.ts`)
+- Track per-opponent: VPIP, PFR, 3-bet %, c-bet %
+- Rolling 30-hand window
+- Generate exploit tips based on tendencies
+  - Tight <18% VPIP: "steal their blinds"
+  - Loose >35% VPIP: "value bet wider"
+  - High c-bet >70%: "float more"
+
+### Feedback UI (`feedback-copy.ts`)
+
+Converts raw feedback to human-readable coaching:
+- **Ratings**: "Great play", "Good decision", "Okay", "Mistake"
+- **Explanations**: Street, action, EV comparison, position context
+- **GTO notes**: Range membership, frequency alignment
+- **Exploit tips**: Specific opponent adjustments
+
+---
+
+## Game Engine (`engine/game-engine.ts`)
+
+**Pure TypeScript class** - no React dependencies, fully testable.
+
+### Core Methods
+
+**`startNewHand()`**
+- Rotate dealer, assign positions
+- Reset stacks to config
+- Post blinds (SB, BB)
+- Deal hole cards
+- Set phase to `preflop`
+
+**`applyAction(playerId, action, amount?)`**
+- Validate via `action-validator.ts`
+- Update player bets, stack
+- Record action in history
+- Check if round complete
+- Advance street or showdown
+
+**`isRoundComplete()`**
+- Complex logic:
+  - All acted at least once
+  - All folded/all-in OR all bets matched
+  - After raise, everyone had chance to respond
+
+**`advanceStreet()`**
+- Reset: betThisStreet, currentBet, lastAggressorIndex
+- Deal community cards (3 for flop, 1 for turn/river)
+- Set action order: first active player left of dealer (SB first postflop)
+
+**`showdown()`**
+- Evaluate all active hands
+- Award pots (side pot aware via `pot.ts`)
+- Generate `HandSummary`
+- Phase to `hand-complete`
+
+### Hand Evaluator (`engine/hand-evaluator.ts`)
+
+**Algorithm:**
+1. Enumerate all C(n, 5) combinations from 7 cards (2 hole + 5 board)
+2. Classify each: high-card → pair → two-pair → ... → straight-flush
+3. Numeric rank: `CATEGORY_BASE + primaryRank*15 + kickers`
+4. Special handling: Wheel straight (A-2-3-4-5), ace as low
+
+**Hand Categories (descending):**
+- Straight Flush (base 9000)
+- Four of a Kind (8000)
+- Full House (7000)
+- Flush (6000)
+- Straight (5000)
+- Three of a Kind (4000)
+- Two Pair (3000)
+- Pair (2000)
+- High Card (1000)
+
+---
+
+## Storage & Persistence
+
+### IndexedDB (`storage/db.ts`)
+
+**Database**: `poker-trainer`
+**Store**: `hands`
+
+**API:**
+- `saveHand(hand: StoredHand)` - Insert or update
+- `getAllHands()` - Fetch all, sorted by timestamp desc
+- `getHand(handId)` - Fetch single hand
+- `deleteHand(handId)` - Remove hand
+- `clearAllHands()` - Nuclear option
+
+**Max Hands**: 1000 (older hands should be archived, not implemented)
+
+### LocalStorage (`storage/settings.ts`)
+
+**Keys:**
+- `poker-trainer-theme` - `'light' | 'dark'`
+- `poker-trainer-settings` - JSON: `{ smallBlind, bigBlind, startingStackBB }`
+
+**Note**: Settings saved but NOT hot-reloaded into GameEngine (engine uses hardcoded defaults on construction).
+
+---
+
+## Component Guide
+
+### AppShell.tsx
+**Purpose**: Root layout, tab navigation, lazy loading
+**State**: `view`, `setView`, `theme toggle`
+**Lazy**: Loads `StatsDashboard` and `HandReview` on demand
+**Layout**: Content area + bottom nav (3 tabs + theme toggle)
+
+### PokerTable.tsx
+**Purpose**: Main play view, orchestrates game UI
+**Sections**:
+- Header: message, history button
+- Opponent row: 5 `OpponentSeat` components
+- Center: `ActionBanner`, `PotDisplay` + board cards
+- Hero: `HeroZone` (cards, stack, bet)
+- Action area: `ActionLog`, `HandResultBanner`, `FeedbackPanel`
+- Footer: Deal button / `ActionButtons` / AI thinking message
+
+**Key Props**: None (consumes `useGameStore` directly)
+
+### ActionButtons.tsx
+**Purpose**: Hero action UI (fold, check/call, raise/bet, all-in)
+**State**: Local `showBetPanel`, `betAmount`
+**Logic**:
+- Fetches `validActions` from engine
+- Renders enabled/disabled buttons
+- Shows `BetSlider` for raise/bet sizing
+- Calls `playerAction()` on click
+
+**Important**: Uses `useGameStore.getState()` in handlers to avoid stale closures
+
+### FeedbackPanel.tsx
+**Purpose**: Displays post-hand coaching cards
+**Props**: `feedback: DecisionFeedback[]`, `isLoading: boolean`
+**UI**: Grid of cards, one per decision
+- Rating header (color-coded)
+- Street, action, position
+- EV breakdown
+- GTO alignment
+- Position analysis
+- Opponent exploit tips
+
+### StatsDashboard.tsx
+**Purpose**: Session statistics + visualizations
+**Data**: Calls `getStats()` (computed, not reactive)
+**Charts** (Recharts):
+- Pie: Win/Loss/Split distribution
+- Line: Cumulative profit over hands
+- Bar: Profit by position
+**Footer**: Recent hands list → click to `setReviewHand()`
+
+### HandReview.tsx
+**Purpose**: Review past hands with feedback
+**Features**:
+- Search filter (by result, position, cards)
+- Hand list sidebar (from `storedHands`)
+- Detail view: cards, board, `ActionLog`, `FeedbackPanel`
+
+**Bug Note**: ActionLog receives stub player list `[{ id: 0, name: 'You' }]` — opponent names won't display in review.
+
+---
+
+## Utilities
+
+### hand-notation.ts
+- `toNotation(card1, card2)` - Convert to "AKs", "QTo" format
+- `getHandRank(notation)` - Rank 1-169 (AA=1, 72o=169)
+
+### format.ts
+- `formatMoney(amount)` - "$123" format
+- `formatAction(action, amount)` - "Raises to $50"
+
+### action-describe.ts
+- `describeAction(action, player, amount)` - "Alex bets $10"
+
+### timing.ts
+- AI_THINK_TIME: 800-1600ms random
+- ANIMATION_DELAY: 150ms card reveal stagger
+
+---
+
+## Testing
+
+**Framework**: Vitest 2
+**Test Files**:
+- `engine/__tests__/engine.test.ts` - GameEngine logic
+- `utils/__tests__/utils.test.ts` - Utility functions
+- `feedback/__tests__/feedback-copy.test.ts` - Feedback text generation
+
+**Run Tests**:
+```bash
+npm run test         # Single run
+npm run test:watch   # Watch mode
+```
+
+**Test Environment**: Node (configured in `vite.config.ts`)
+
+---
+
+## Development Workflow
+
+### Starting Dev Server
+```bash
+npm install
+npm run dev
+```
+- Vite dev server on http://localhost:5173/
+- Hot module replacement enabled
+- Service worker not active in dev (production only)
+
+### Building for Production
+```bash
+npm run build
+```
+- TypeScript type check (`tsc -b`)
+- Vite build (minified, chunked)
+- Output to `dist/`
+
+### Preview Production Build
+```bash
+npm run preview
+```
+
+### PWA / Service Worker
+- Manual service worker in `public/sw.js`
+- Registered in `main.tsx`
+- Caches: app shell + `/gto-ranges/6max-preflop.json`
+- Cache-first strategy with network fallback
+
+---
+
+## Common Tasks
+
+### Adding a New AI Personality
+1. Add profile to `ai/profiles.ts` → `AI_PROFILES` object
+2. Update `GameEngine` constructor to include new AI player
+3. Add GTO range scenarios if needed in `public/gto-ranges/6max-preflop.json`
+
+### Modifying Feedback Criteria
+- **EV**: Edit `feedback/ev-simulator.worker.ts` (simulation count, logic)
+- **GTO**: Edit `feedback/gto-lookup.ts` (alignment scoring)
+- **Position**: Edit `feedback/position-analysis.ts` (thresholds)
+- **Opponent**: Edit `feedback/opponent-tracker.ts` (stat definitions, windows)
+- **Copy**: Edit `feedback/feedback-copy.ts` (UI text generation)
+
+### Changing Game Config
+**Current default** (hardcoded in `GameEngine`):
+```typescript
+{ smallBlind: 1, bigBlind: 2, startingStackBB: 100, playerCount: 6 }
+```
+
+**To change**:
+1. Edit default in `engine/game-engine.ts` constructor
+2. OR pass config to `GameEngine` constructor in `game-store.ts`
+3. OR implement hot-reload from `settings` state (currently not wired)
+
+### Adding a New Component
+1. Create in `src/components/`
+2. Import into parent (usually `PokerTable.tsx` or `AppShell.tsx`)
+3. Access state via `useGameStore()` hook
+4. Avoid prop drilling - prefer direct store access
+
+### Styling Guidelines
+- Use Tailwind classes (custom "Offsuit" design tokens in `tailwind.config.js`)
+- Colors: `surface-*`, `primary-*`, `secondary-*`, `accent-*`, `text-*`
+- Safe area: `pt-safe`, `pb-safe` for iOS notch
+- Dark mode: `dark:` prefix (theme toggle in AppShell)
+- Animations: Defined in `index.css` (slide-in, fade-in, deal, chip-place)
+
+---
+
+## Known Issues & Limitations
+
+1. **PlayerSeat + seat-layout.ts**: Dead code from oval table design - replaced by horizontal `OpponentSeat` row but not deleted
+2. **Range expansion**: `expandRange()` utility exists but only used in tests, not in AI runtime
+3. **Situation hashing**: `situationHash()` implemented but not integrated into feedback/AI
+4. **Settings hot-reload**: localStorage settings saved but not applied to running GameEngine
+5. **Side pot showdown**: `calculatePots()` logic exists but showdown awards single pot split (no partial pot display)
+6. **Review ActionLog bug**: Stub player list causes opponent names to not display in review
+7. **vite-plugin-pwa**: Dependency exists but not configured - manual SW used instead
+8. **No URL routing**: All navigation is internal state - no shareable URLs for specific hands/views
+9. **No auth/backend**: Fully client-side - no user accounts or cross-device sync
+10. **Fixed 6-max**: No support for full ring (9-handed) or heads-up (2-handed)
+
+---
+
+## Extension Points
+
+### Adding Tournament Mode
+- Extend `GameConfig` with blindLevel, blindSchedule
+- Add blind increase timer in `game-store.ts`
+- Track eliminations, display chip leader board
+
+### Multiplayer
+- Extract `GameEngine` to shared backend (Node.js)
+- WebSocket for real-time action sync
+- Replace AI players with human seats
+
+### Advanced Analytics
+- Track hand history over time (currently only session)
+- Showdown equity analysis (range vs range)
+- Leak detection (common mistakes by street/position)
+- Export to PokerTracker/HM format
+
+### More Feedback Types
+- Blocker analysis (holding blockers to opponent's value/bluff range)
+- ICM analysis (for tournaments)
+- Board texture recognition (dry vs wet, static vs dynamic)
+- Bet sizing recommendations (current vs optimal)
+
+### AI Improvements
+- Postflop GTO ranges (currently only preflop)
+- Opponent modeling (adaptive AI based on hero's play)
+- Hand reading (narrow range based on action sequence)
+- Exploitative sizing adjustments
+
+---
+
+## Code Conventions
+
+### Naming
+- **Components**: PascalCase (`PokerTable.tsx`)
+- **Utilities**: camelCase (`hand-notation.ts`, `formatMoney()`)
+- **Types**: PascalCase (`GameState`, `Player`)
+- **Constants**: UPPER_SNAKE_CASE (`VARIANCE_RATE`, `SMALL_BLIND`)
+- **Store actions**: camelCase (`startHand()`, `playerAction()`)
+
+### File Organization
+- One component per file
+- Co-locate types with implementation when domain-specific
+- Shared types in `types/poker.ts`
+- Tests in `__tests__/` sibling folder
+
+### TypeScript
+- **Strict mode** enabled
+- Prefer type inference over explicit annotations
+- Use template literal types for card notation
+- Avoid `any` (use `unknown` if needed)
+
+### React
+- Functional components only (no classes)
+- Hooks at top level (never in conditionals)
+- `useGameStore()` for state, avoid prop drilling
+- `useGameStore.getState()` in handlers to avoid stale closures
+- Key props on lists (use stable IDs, not indices)
+
+### Styling
+- Tailwind utility classes (avoid inline styles)
+- Dark mode variants via `dark:` prefix
+- Mobile-first responsive design
+- Use `dvh` for viewport height (not `vh`)
+- Touch-friendly tap targets (min 44x44px)
+
+---
+
+## Performance Considerations
+
+- **Lazy loading**: Stats + Review tabs only load on first view
+- **Web Worker**: EV simulation off main thread (2000 Monte Carlo runs)
+- **Debounced actions**: AI think delays prevent UI lock
+- **Indexed state**: `currentPlayerIndex`, `dealerIndex` for O(1) lookups
+- **Vite chunking**: Recharts in separate chunk (manual splitChunks)
+- **Progressive board reveal**: `visibleBoardCount` state for staggered animations
+- **IndexedDB**: Offloads hand history from memory after session
+
+---
+
+## Security & Privacy
+
+- **Fully client-side**: No data sent to external servers
+- **No auth**: No user accounts or personal data collected
+- **Local storage only**: Theme + settings in localStorage
+- **IndexedDB**: Hand history stays on device
+- **No analytics**: No tracking or telemetry
+- **No external CDN**: All assets bundled (GTO JSON served from `/public`)
+
+---
+
+## Future Roadmap Ideas
+
+- [ ] Add heads-up (2-player) mode
+- [ ] Implement tournament with blind increases
+- [ ] Range visualization tool (grid of 169 hands)
+- [ ] Hand replayer with scrubber
+- [ ] Export hand histories to CSV/JSON
+- [ ] Multi-language support (i18n)
+- [ ] Voice commentary for hands
+- [ ] Integration with real poker sites (hand import)
+- [ ] Multiplayer rooms with invite codes
+- [ ] AI difficulty levels (beginner, intermediate, expert)
+- [ ] Customizable starting stacks and blind structures
+- [ ] Animation speed controls
+- [ ] Keyboard shortcuts for actions
+- [ ] Undo last action (training mode)
+- [ ] Quiz mode: "What would you do?" scenarios
+
+---
+
+## Contact & Contribution
+
+This is a single-player training app with no backend. For AI assistants working on this codebase:
+
+1. **Respect the architecture**: Don't break the engine/store/UI separation
+2. **Test your changes**: Run `npm test` before committing
+3. **Follow conventions**: Match existing naming, structure, patterns
+4. **Update this file**: If you add major features, document them here
+5. **Preserve purity**: Keep `GameEngine` framework-agnostic (pure TS)
+
+---
+
+*Last updated: 2026-07-09*
+*AI Context Version: 1.0*
