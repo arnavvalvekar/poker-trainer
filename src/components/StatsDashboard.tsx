@@ -1,23 +1,98 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid,
 } from 'recharts';
 import { useGameStore } from '../store/game-store';
 import { resultColor, resultLabel } from '../utils/format';
+import { HeroStatsPanel } from './HeroStatsPanel';
+import { GTOComparison } from './GTOComparison';
+import { PositionalBreakdown } from './PositionalBreakdown';
+import type { SessionStats } from '../types/poker';
+import type { StoredHand } from '../storage/hand-history';
 
 const COLORS = ['#34C759', '#FF3B30', '#8E8E93'];
 
+type StatsTab = 'overview' | 'hero' | 'leaks' | 'position';
+
 export function StatsDashboard() {
   const { getStats, storedHands, setReviewHand } = useGameStore();
+  const [activeTab, setActiveTab] = useState<StatsTab>('overview');
   const stats = getStats();
 
-  const resultData = [
-    { name: 'Wins', value: stats.wins },
-    { name: 'Losses', value: stats.losses },
-    { name: 'Splits', value: stats.splits },
-  ].filter((d) => d.value > 0);
+  return (
+    <div className="flex-1 flex flex-col">
+      {/* Tab Navigation */}
+      <div className="border-b border-white/10 px-5">
+        <div className="flex gap-1 -mb-px">
+          <TabButton
+            active={activeTab === 'overview'}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </TabButton>
+          <TabButton
+            active={activeTab === 'hero'}
+            onClick={() => setActiveTab('hero')}
+          >
+            My Stats
+          </TabButton>
+          <TabButton
+            active={activeTab === 'leaks'}
+            onClick={() => setActiveTab('leaks')}
+          >
+            Leaks
+          </TabButton>
+          <TabButton
+            active={activeTab === 'position'}
+            onClick={() => setActiveTab('position')}
+          >
+            Position
+          </TabButton>
+        </div>
+      </div>
+      
+      {/* Tab Content */}
+      {activeTab === 'overview' && <OverviewTab stats={stats} storedHands={storedHands} setReviewHand={setReviewHand} />}
+      {activeTab === 'hero' && <HeroStatsPanel />}
+      {activeTab === 'leaks' && <GTOComparison />}
+      {activeTab === 'position' && <PositionalBreakdown />}
+    </div>
+  );
+}
 
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+        active
+          ? 'text-white border-white'
+          : 'text-offsuit-grey border-transparent hover:text-white/70'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function OverviewTab({
+  stats,
+  storedHands,
+  setReviewHand,
+}: {
+  stats: SessionStats;
+  storedHands: StoredHand[];
+  setReviewHand: (handId: string | null) => void;
+}) {
   const positionData = Object.entries(stats.positionalStats)
     .filter(([, v]) => v.hands > 0)
     .map(([pos, v]) => ({
@@ -41,6 +116,12 @@ export function StatsDashboard() {
       </div>
     );
   }
+  
+  const resultData = [
+    { name: 'Wins', value: stats.wins },
+    { name: 'Losses', value: stats.losses },
+    { name: 'Splits', value: stats.splits },
+  ].filter((d) => d.value > 0);
 
   return (
     <div className="flex-1 overflow-y-auto p-5 space-y-6">
@@ -118,7 +199,7 @@ export function StatsDashboard() {
       <div>
         <h3 className="text-sm font-semibold text-offsuit-grey mb-2">Recent hands</h3>
         <div className="space-y-1">
-          {storedHands.slice(0, 10).map((h) => (
+          {storedHands.slice(0, 10).map((h: any) => (
             <button
               key={h.handId}
               onClick={() => setReviewHand(h.handId)}
