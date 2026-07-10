@@ -8,12 +8,15 @@ import { resultColor, resultLabel } from '../utils/format';
 import { HeroStatsPanel } from './HeroStatsPanel';
 import { GTOComparison } from './GTOComparison';
 import { PositionalBreakdown } from './PositionalBreakdown';
+import { TrendCharts } from './TrendCharts';
+import { AdvancedStatsPanel } from './AdvancedStatsPanel';
+import { GamificationPanel } from './GamificationPanel';
 import type { SessionStats } from '../types/poker';
 import type { StoredHand } from '../storage/hand-history';
 
 const COLORS = ['#34C759', '#FF3B30', '#8E8E93'];
 
-type StatsTab = 'overview' | 'hero' | 'leaks' | 'position';
+type StatsTab = 'overview' | 'hero' | 'leaks' | 'position' | 'trends' | 'advanced' | 'achievements';
 
 export function StatsDashboard() {
   const { getStats, storedHands, setReviewHand } = useGameStore();
@@ -23,8 +26,8 @@ export function StatsDashboard() {
   return (
     <div className="flex-1 flex flex-col">
       {/* Tab Navigation */}
-      <div className="border-b border-white/10 px-5">
-        <div className="flex gap-1 -mb-px">
+      <div className="border-b border-white/10 px-5 overflow-x-auto">
+        <div className="flex gap-1 -mb-px min-w-max">
           <TabButton
             active={activeTab === 'overview'}
             onClick={() => setActiveTab('overview')}
@@ -49,6 +52,24 @@ export function StatsDashboard() {
           >
             Position
           </TabButton>
+          <TabButton
+            active={activeTab === 'trends'}
+            onClick={() => setActiveTab('trends')}
+          >
+            Trends
+          </TabButton>
+          <TabButton
+            active={activeTab === 'advanced'}
+            onClick={() => setActiveTab('advanced')}
+          >
+            Advanced
+          </TabButton>
+          <TabButton
+            active={activeTab === 'achievements'}
+            onClick={() => setActiveTab('achievements')}
+          >
+            Achievements
+          </TabButton>
         </div>
       </div>
       
@@ -57,6 +78,9 @@ export function StatsDashboard() {
       {activeTab === 'hero' && <HeroStatsPanel />}
       {activeTab === 'leaks' && <GTOComparison />}
       {activeTab === 'position' && <PositionalBreakdown />}
+      {activeTab === 'trends' && <TrendCharts />}
+      {activeTab === 'advanced' && <AdvancedStatsPanel />}
+      {activeTab === 'achievements' && <GamificationPanel />}
     </div>
   );
 }
