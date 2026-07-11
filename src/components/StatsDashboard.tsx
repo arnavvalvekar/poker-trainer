@@ -11,12 +11,13 @@ import { PositionalBreakdown } from './PositionalBreakdown';
 import { TrendCharts } from './TrendCharts';
 import { AdvancedStatsPanel } from './AdvancedStatsPanel';
 import { GamificationPanel } from './GamificationPanel';
+import { AIInsightsPanel } from './AIInsightsPanel';
 import type { SessionStats } from '../types/poker';
 import type { StoredHand } from '../storage/hand-history';
 
 const COLORS = ['#34C759', '#FF3B30', '#8E8E93'];
 
-type StatsTab = 'overview' | 'hero' | 'leaks' | 'position' | 'trends' | 'advanced' | 'achievements';
+type StatsTab = 'overview' | 'hero' | 'leaks' | 'position' | 'trends' | 'advanced' | 'insights' | 'achievements';
 
 export function StatsDashboard() {
   const { getStats, storedHands, setReviewHand } = useGameStore();
@@ -65,6 +66,12 @@ export function StatsDashboard() {
             Advanced
           </TabButton>
           <TabButton
+            active={activeTab === 'insights'}
+            onClick={() => setActiveTab('insights')}
+          >
+            AI Insights
+          </TabButton>
+          <TabButton
             active={activeTab === 'achievements'}
             onClick={() => setActiveTab('achievements')}
           >
@@ -80,6 +87,7 @@ export function StatsDashboard() {
       {activeTab === 'position' && <PositionalBreakdown />}
       {activeTab === 'trends' && <TrendCharts />}
       {activeTab === 'advanced' && <AdvancedStatsPanel />}
+      {activeTab === 'insights' && <AIInsightsPanel />}
       {activeTab === 'achievements' && <GamificationPanel />}
     </div>
   );
