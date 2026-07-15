@@ -287,7 +287,8 @@ export class GameEngine {
 
   private isRoundComplete(actingPlayerId: number, prevBet: number): boolean {
     const player = this.state.players[actingPlayerId];
-    const wasAggression = player.betThisStreet > prevBet || this.state.actions.at(-1)?.action === 'raise';
+    const lastAction = this.state.actions[this.state.actions.length - 1];
+    const wasAggression = player.betThisStreet > prevBet || lastAction?.action === 'raise';
 
     const activePlayers = this.state.players.filter((p) => !p.folded && !p.allIn);
     if (activePlayers.length === 0) return true;
