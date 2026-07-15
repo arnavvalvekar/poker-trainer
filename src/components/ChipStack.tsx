@@ -28,7 +28,7 @@ export function ChipStack({ amount, className = '', animate = false }: ChipStack
           </div>
         ))}
       </div>
-      <span className="mt-0.5 text-[10px] font-semibold text-white tabular-nums whitespace-nowrap">
+      <span className="mt-0.5 text-xs font-semibold text-white tabular-nums whitespace-nowrap">
         {formatMoney(amount)}
       </span>
     </div>

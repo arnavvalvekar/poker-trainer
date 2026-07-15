@@ -34,6 +34,7 @@ interface GameStore {
   startHand: () => Promise<void>;
   playerAction: (action: ActionType, amount?: number) => Promise<void>;
   processAI: () => Promise<void>;
+  skipHand: () => Promise<void>;
   toggleHistory: () => void;
   selectHistoryHand: (handNumber: number) => void;
   setView: (view: AppView) => void;
@@ -44,6 +45,7 @@ interface GameStore {
 
 const engine = new GameEngine();
 let processingLock = false;
+let aiRunId = 0;
 
 function buildHistoryEntry(
   state: GameState,
@@ -88,7 +90,11 @@ async function revealBoard(
   }
 }
 
-async function finishHand(set: (partial: Partial<GameStore>) => void, get: () => GameStore): Promise<void> {
+async function finishHand(
+  set: (partial: Partial<GameStore>) => void,
+  get: () => GameStore,
+  fast = false,
+): Promise<void> {
   engine.finalizeHand();
   const summary = engine.getHandSummary();
   const { state, heroStartStack } = get();
@@ -97,7 +103,7 @@ async function finishHand(set: (partial: Partial<GameStore>) => void, get: () =>
   opponentTracker.processHand(summary.actions, state.players);
 
   set({ isAnimating: true, actionBanner: null, message: 'Reviewing your plays...', isAnalyzing: true });
-  await delay(500);
+  if (!fast) await delay(500);
 
   let feedback: DecisionFeedback[] = [];
   try {
@@ -131,6 +137,128 @@ async function finishHand(set: (partial: Partial<GameStore>) => void, get: () =>
         ? `You lost $${Math.abs(entry.stackChange)}`
         : 'Split pot — hand complete',
   });
+}
+
+async function runAIActions(
+  set: (partial: Partial<GameStore>) => void,
+  get: () => GameStore,
+  options: { fast?: boolean } = {},
+): Promise<void> {
+  const fast = options.fast ?? false;
+  const runId = ++aiRunId;
+  const isStale = () => runId !== aiRunId;
+  const wait = (ms: number) => (fast ? Promise.resolve() : delay(ms));
+  const waitRandom = (_base: number, _variance: number) =>
+    fast ? Promise.resolve() : randomDelay(_base, _variance);
+
+  processingLock = true;
+  set({ isAnimating: true });
+
+  let prevBoardLen = get().state.board.length;
+  let prevStreet = get().state.street;
+  let safety = 200;
+
+  while (safety-- > 0) {
+    if (isStale()) {
+      processingLock = false;
+      return;
+    }
+
+    let state = engine.getState();
+
+    if (state.phase === 'hand-complete' || state.phase === 'showdown') {
+      processingLock = false;
+      set({ visibleBoardCount: state.board.length });
+      await finishHand(set, get, fast);
+      return;
+    }
+
+    const current = state.players[state.currentPlayerIndex];
+    if (!current?.isAI) {
+      set({ isAnimating: false });
+      processingLock = false;
+      return;
+    }
+
+    await waitRandom(TIMING.aiThink, TIMING.aiThinkVariance);
+    if (isStale()) {
+      processingLock = false;
+      return;
+    }
+
+    const decision = engine.getAIDecision(current.id);
+    if (!fast) {
+      set({
+        actionBanner: describeAction(current.name, decision.action, decision.amount ?? 0),
+      });
+    }
+
+    await wait(280);
+    if (isStale()) {
+      processingLock = false;
+      return;
+    }
+
+    engine.processAITurn();
+    state = engine.getState();
+
+    const lastAction = state.actions[state.actions.length - 1];
+    if (lastAction && !fast) {
+      set({
+        state,
+        actionBanner: describeAction(current.name, lastAction.action, lastAction.amount),
+        message: describeAction(current.name, lastAction.action, lastAction.amount),
+      });
+    } else {
+      set({ state });
+    }
+
+    await wait(400);
+    if (isStale()) {
+      processingLock = false;
+      return;
+    }
+    if (!fast) set({ actionBanner: null });
+
+    if (state.board.length > prevBoardLen) {
+      if (!fast) {
+        const streetNames: Record<string, string> = {
+          flop: 'The flop',
+          turn: 'The turn',
+          river: 'The river',
+        };
+        if (state.street !== prevStreet) {
+          set({ actionBanner: streetNames[state.street] ?? 'New cards' });
+          await wait(500);
+          if (isStale()) {
+            processingLock = false;
+            return;
+          }
+          set({ actionBanner: null });
+        }
+        await revealBoard(set, get, state.board.length);
+      } else {
+        set({ visibleBoardCount: state.board.length });
+      }
+      prevBoardLen = state.board.length;
+      prevStreet = state.street;
+      await wait(TIMING.streetPause);
+      if (isStale()) {
+        processingLock = false;
+        return;
+      }
+    }
+
+    if (state.phase === 'hand-complete') {
+      processingLock = false;
+      set({ visibleBoardCount: state.board.length });
+      await finishHand(set, get, fast);
+      return;
+    }
+  }
+
+  set({ isAnimating: false });
+  processingLock = false;
 }
 
 function computeStats(storedHands: StoredHand[]): SessionStats {
@@ -289,86 +417,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     processingLock = false;
-    await get().processAI();
+    await runAIActions(set, get);
+  },
+
+  skipHand: async () => {
+    const { state } = get();
+    const hero = state.players.find((p) => p.isHero);
+    if (!hero?.folded || state.phase === 'waiting' || state.phase === 'hand-complete') return;
+
+    aiRunId++;
+    set({ actionBanner: null, message: 'Finishing hand...' });
+    await runAIActions(set, get, { fast: true });
   },
 
   processAI: async () => {
     if (processingLock) return;
-    processingLock = true;
-    set({ isAnimating: true });
-
-    let prevBoardLen = get().state.board.length;
-    let prevStreet = get().state.street;
-    let safety = 100;
-
-    while (safety-- > 0) {
-      let state = engine.getState();
-
-      if (state.phase === 'hand-complete' || state.phase === 'showdown') {
-        processingLock = false;
-        await finishHand(set, get);
-        return;
-      }
-
-      const current = state.players[state.currentPlayerIndex];
-      if (!current?.isAI) {
-        set({ isAnimating: false });
-        processingLock = false;
-        return;
-      }
-
-      await randomDelay(TIMING.aiThink, TIMING.aiThinkVariance);
-
-      const decision = engine.getAIDecision(current.id);
-      set({
-        actionBanner: describeAction(current.name, decision.action, decision.amount ?? 0),
-      });
-
-      await delay(280);
-
-      engine.processAITurn();
-      state = engine.getState();
-
-      const lastAction = state.actions[state.actions.length - 1];
-      if (lastAction) {
-        set({
-          state,
-          actionBanner: describeAction(current.name, lastAction.action, lastAction.amount),
-          message: describeAction(current.name, lastAction.action, lastAction.amount),
-        });
-      } else {
-        set({ state });
-      }
-
-      await delay(400);
-      set({ actionBanner: null });
-
-      if (state.board.length > prevBoardLen) {
-        const streetNames: Record<string, string> = {
-          flop: 'The flop',
-          turn: 'The turn',
-          river: 'The river',
-        };
-        if (state.street !== prevStreet) {
-          set({ actionBanner: streetNames[state.street] ?? 'New cards' });
-          await delay(500);
-          set({ actionBanner: null });
-        }
-        await revealBoard(set, get, state.board.length);
-        prevBoardLen = state.board.length;
-        prevStreet = state.street;
-        await delay(TIMING.streetPause);
-      }
-
-      if (state.phase === 'hand-complete') {
-        processingLock = false;
-        await finishHand(set, get);
-        return;
-      }
-    }
-
-    set({ isAnimating: false });
-    processingLock = false;
+    await runAIActions(set, get);
   },
 
   toggleHistory: () => set({ showHistory: !get().showHistory }),

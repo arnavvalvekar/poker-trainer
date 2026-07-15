@@ -32,9 +32,9 @@ function rankAriaLabel(rank: string, suit: Suit): string {
 }
 
 const SIZES = {
-  sm: { w: 40, h: 56, rank: 11, suit: 14, rx: 8 },
-  md: { w: 48, h: 68, rank: 13, suit: 18, rx: 10 },
-  lg: { w: 64, h: 90, rank: 16, suit: 24, rx: 12 },
+  sm: { w: 46, h: 64, rank: 12, suit: 15, rx: 9 },
+  md: { w: 54, h: 76, rank: 14, suit: 19, rx: 11 },
+  lg: { w: 68, h: 96, rank: 17, suit: 26, rx: 12 },
 };
 
 interface PlayingCardProps {

@@ -1,6 +1,5 @@
 import { useGameStore } from '../store/game-store';
 import { ActionButtons } from './ActionButtons';
-import { ActionLog } from './ActionLog';
 import { ActionBanner } from './ActionBanner';
 import { HandHistoryPanel } from './HandHistoryPanel';
 import { HandResultBanner } from './HandResultBanner';
@@ -38,26 +37,30 @@ export function PokerTable() {
 
   const isInHand = state.phase !== 'waiting';
   const isShowdown = state.phase === 'hand-complete' || state.phase === 'showdown';
+  const canSkipHand = Boolean(
+    hero?.folded && state.phase !== 'waiting' && state.phase !== 'hand-complete',
+  );
   const playerNames = new Map(state.players.map((p) => [p.id, p.name]));
   const boardVisible = isShowdown ? state.board.length : visibleBoardCount;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-black text-white safe-area">
-      <header className="flex items-center justify-between px-5 py-3 sticky top-0 z-30 bg-black/90 backdrop-blur-sm">
+      <header className="flex items-center justify-between gap-3 px-5 py-3 sticky top-0 z-30 bg-black/90 backdrop-blur-sm">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-lg" aria-hidden>♠</span>
-            <h1 className="text-[17px] font-semibold tracking-tight">offsuit trainer</h1>
-          </div>
-          <p className="text-xs text-offsuit-grey truncate mt-0.5 transition-all duration-300">{message}</p>
+          <h1 className="text-[17px] font-semibold tracking-tight lowercase">
+            offsuit <span className="text-offsuit-grey font-medium">trainer</span>
+          </h1>
+          {message && (
+            <p className="offsuit-chip mt-1.5 max-w-full truncate">{message}</p>
+          )}
         </div>
         <button
           onClick={toggleHistory}
-          className="ml-3 offsuit-pill !h-9 !px-4 !text-xs !font-medium"
+          className="ml-1 offsuit-pill !h-9 !px-4 !text-[13px] !font-medium shrink-0"
         >
           History
           {handHistory.length > 0 && (
-            <span className="ml-1.5 bg-white/15 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            <span className="ml-1.5 bg-white/15 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
               {handHistory.length}
             </span>
           )}
@@ -65,10 +68,10 @@ export function PokerTable() {
       </header>
 
       <div className="flex-1 flex flex-col px-4 py-2 min-h-0 overflow-y-auto">
-        {/* Offsuit-style table: opponent row → board → hero zone */}
-        <div className="flex flex-col flex-1 min-h-[300px] max-h-[52dvh] gap-3">
+        {/* Offsuit table: opponents → board/pot → hero → result modules */}
+        <div className="flex flex-col flex-1 min-h-[320px] max-h-[58dvh] gap-4">
           {isInHand && opponents.length > 0 && (
-            <div className="flex justify-center gap-1.5 sm:gap-2 pt-1 overflow-x-auto scrollbar-thin">
+            <div className="flex justify-center gap-2 sm:gap-2.5 pt-1 overflow-x-auto scrollbar-thin">
               {opponents.map((player) => (
                 <OpponentSeat
                   key={player.id}
@@ -85,7 +88,7 @@ export function PokerTable() {
             </div>
           )}
 
-          <div className="relative flex-1 flex flex-col items-center justify-center gap-2 min-h-[140px]">
+          <div className="relative flex-1 flex flex-col items-center justify-center gap-3 min-h-[160px]">
             <ActionBanner message={actionBanner} />
             <BoardCards board={state.board} visibleCount={boardVisible} />
             {isInHand && <PotDisplay amount={pot} street={state.street} />}
@@ -104,12 +107,6 @@ export function PokerTable() {
             />
           )}
         </div>
-
-        {isInHand && (
-          <div className="mt-2 px-3 py-2 offsuit-module transition-all duration-300">
-            <ActionLog actions={state.actions} players={state.players} />
-          </div>
-        )}
 
         {lastSummary && isShowdown && (
           <HandResultBanner summary={lastSummary} playerNames={playerNames} />
@@ -141,9 +138,16 @@ export function PokerTable() {
           </button>
         ) : isHeroTurn ? (
           <ActionButtons />
+        ) : canSkipHand ? (
+          <button
+            onClick={() => useGameStore.getState().skipHand()}
+            className="w-full h-[52px] bg-surface text-white rounded-full font-semibold text-[15px] touch-manipulation transition-all active:scale-[0.98] ring-1 ring-white/15"
+          >
+            Skip to result
+          </button>
         ) : (
           <div className="text-center py-4">
-            <div className="inline-flex items-center gap-2.5 text-offsuit-grey text-sm">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface text-offsuit-grey text-sm">
               <span className="flex gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce-dot" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce-dot" style={{ animationDelay: '150ms' }} />

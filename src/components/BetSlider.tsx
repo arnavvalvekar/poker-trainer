@@ -83,7 +83,7 @@ export function BetSlider({ min, max, value, step, onChange, label = 'Bet amount
     return (
       <div className="text-center py-2">
         <div className="text-[32px] font-semibold text-white tabular-nums tracking-tight">${value}</div>
-        <div className="text-[10px] text-offsuit-grey mt-0.5">{label}</div>
+        <div className="text-xs text-offsuit-grey mt-0.5">{label}</div>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export function BetSlider({ min, max, value, step, onChange, label = 'Bet amount
           >
             ${value}
           </div>
-          <div className="text-[10px] text-offsuit-grey mt-0.5">{label}</div>
+          <div className="text-xs text-offsuit-grey mt-0.5">{label}</div>
         </div>
 
         <button
@@ -149,8 +149,8 @@ export function BetSlider({ min, max, value, step, onChange, label = 'Bet amount
           style={{ left: `calc(16px + (100% - 32px) * ${pct / 100})` }}
         />
 
-        <div className="absolute bottom-0 left-4 text-[10px] text-offsuit-muted tabular-nums pointer-events-none">${min}</div>
-        <div className="absolute bottom-0 right-4 text-[10px] text-offsuit-muted tabular-nums pointer-events-none">${max}</div>
+        <div className="absolute bottom-0 left-4 text-xs text-offsuit-grey tabular-nums pointer-events-none">${min}</div>
+        <div className="absolute bottom-0 right-4 text-xs text-offsuit-grey tabular-nums pointer-events-none">${max}</div>
       </div>
     </div>
   );

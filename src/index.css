@@ -37,6 +37,23 @@ body {
   .offsuit-module {
     @apply bg-surface rounded-module shadow-module;
   }
+
+  /* Secondary copy only on raised surfaces — never bare on pure black */
+  .offsuit-caption {
+    @apply text-[13px] font-medium text-offsuit-grey leading-snug;
+  }
+
+  .offsuit-meta {
+    @apply text-xs font-medium text-offsuit-grey leading-snug;
+  }
+
+  .offsuit-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface text-offsuit-grey text-xs font-medium;
+  }
+
+  .offsuit-section-title {
+    @apply text-[13px] font-medium text-offsuit-grey;
+  }
 }
 
 /* Light theme — softened for readability */
@@ -63,6 +80,16 @@ html.light .text-offsuit-grey {
 
 html.light .border-white\/5 {
   border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.light .bg-surface-raised {
+  background-color: #e5e5ea;
+}
+
+html.light .shadow-module,
+html.light .shadow-card,
+html.light .shadow-avatar {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 /* Safe area for notched phones */

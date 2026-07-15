@@ -18,7 +18,7 @@ export function ActionLog({ actions, players, maxItems = 8 }: ActionLogProps) {
 
   if (actions.length === 0) {
     return (
-      <div className="text-xs text-offsuit-muted text-center py-2">
+      <div className="text-[13px] text-offsuit-grey text-center py-2">
         Actions will appear here
       </div>
     );
@@ -27,7 +27,7 @@ export function ActionLog({ actions, players, maxItems = 8 }: ActionLogProps) {
   let lastStreet = '';
 
   return (
-    <div ref={scrollRef} className="max-h-28 overflow-y-auto space-y-0.5 scrollbar-thin">
+    <div ref={scrollRef} className="max-h-36 overflow-y-auto space-y-1 scrollbar-thin">
       {recent.map((action, i) => {
         const showStreetHeader = action.street !== lastStreet;
         lastStreet = action.street;
@@ -36,11 +36,11 @@ export function ActionLog({ actions, players, maxItems = 8 }: ActionLogProps) {
         return (
           <div key={`${action.timestamp}-${i}`}>
             {showStreetHeader && (
-              <div className="text-[10px] text-offsuit-muted font-medium mt-1 mb-0.5">
+              <div className="inline-flex mt-1.5 mb-1 px-2.5 py-0.5 rounded-full bg-surface-raised text-xs font-medium text-offsuit-grey">
                 {streetLabel(action.street)}
               </div>
             )}
-            <div className={`text-xs ${actionColor(action.action)} ${action.playerId === 0 ? 'font-medium' : ''}`}>
+            <div className={`text-[13px] ${actionColor(action.action)} ${action.playerId === 0 ? 'font-medium' : ''}`}>
               {formatAction(action, player)}
             </div>
           </div>

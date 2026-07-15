@@ -21,6 +21,11 @@ export default {
       boxShadow: {
         card: '0 2px 8px rgba(0, 0, 0, 0.35)',
         module: '0 4px 16px rgba(0, 0, 0, 0.45)',
+        avatar: '0 2px 10px rgba(0, 0, 0, 0.4)',
+      },
+      fontSize: {
+        caption: ['13px', { lineHeight: '1.3', fontWeight: '500' }],
+        meta: ['12px', { lineHeight: '1.3', fontWeight: '500' }],
       },
       backgroundImage: {
         'feature-gradient':
