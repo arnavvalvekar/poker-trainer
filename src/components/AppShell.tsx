@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { useGameStore } from '../store/game-store';
 import { PokerTable } from './PokerTable';
+import { HomeScreen } from './HomeScreen';
 
 const StatsDashboard = lazy(() =>
   import('./StatsDashboard').then((m) => ({ default: m.StatsDashboard })),
@@ -91,6 +92,7 @@ export function AppShell() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-black">
+      {view === 'home' && <HomeScreen />}
       {view === 'play' && <PokerTable />}
       {view === 'stats' && (
         <div className="flex flex-col flex-1 min-h-0 bg-black text-white">

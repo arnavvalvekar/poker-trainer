@@ -106,12 +106,12 @@ Short and friendly. Feature title carries the label; meta is factual. No coachin
 
 ### Checklist
 
-- [ ] Agree MVP hero metric (stack vs hands trained vs accuracy)
-- [ ] Add `home` view + HomeScreen layout per anatomy above
-- [ ] Feature card → Play; Stats / Review rows wired
-- [ ] Contrast: secondary text only on surfaces
-- [ ] Light enter / press motion
-- [ ] Empty states when no hands yet (calm caption in module, not bare grey)
+- [x] Agree MVP hero metric (stack vs hands trained vs accuracy) - chose hands trained
+- [x] Add `home` view + HomeScreen layout per anatomy above
+- [x] Feature card → Play; Stats / Review rows wired
+- [x] Contrast: secondary text only on surfaces
+- [x] Light enter / press motion
+- [x] Empty states when no hands yet (calm caption in module, not bare grey)
 
 ## Out of scope
 
