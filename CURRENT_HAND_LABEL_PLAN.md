@@ -86,10 +86,10 @@ Update when board length or hole cards change (normal React derive — no extra 
 
 ### Checklist
 
-- [ ] Helper: notation preflop, `evaluateHand` name postflop
-- [ ] `HeroZone` layout: label above card fan on surface chip
-- [ ] Wire `board` from table; hide when no cards / folded
-- [ ] Mobile: no overflow into pot / avatars; truncate long names
+- [x] Helper: notation preflop, `evaluateHand` name postflop
+- [x] `HeroZone` layout: label above card fan on surface chip
+- [x] Wire `board` from table; hide when no cards / folded
+- [x] Mobile: no overflow into pot / avatars; truncate long names
 - [ ] Quick manual check: pair, two pair, flush names read clearly
 
 ## Follow-ups (optional)
