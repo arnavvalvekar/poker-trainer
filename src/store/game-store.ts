@@ -9,7 +9,7 @@ import { describeAction } from '../utils/action-describe';
 import { delay, randomDelay, TIMING } from '../utils/timing';
 import type { ActionType, GameState, HandHistoryEntry, HandSummary, SessionStats } from '../types/poker';
 
-export type AppView = 'play' | 'stats' | 'review';
+export type AppView = 'home' | 'play' | 'stats' | 'review';
 
 interface GameStore {
   engine: GameEngine;
@@ -318,7 +318,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   heroStartStack: 0,
   showHistory: false,
   message: 'Press "Deal Hand" to start training.',
-  view: 'play',
+  view: 'home',
   settings: loadSettings(),
   isAnalyzing: false,
   isAnimating: false,
