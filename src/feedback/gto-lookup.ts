@@ -1,7 +1,9 @@
-import type { ActionType, Position } from '../types/poker';
+import type { ActionType } from '../types/poker';
 import { getScenario } from '../ai/range-lookup';
 import { cardsToHandNotation } from '../utils/hand-notation';
 import { getRangeFrequency, isHandInRange } from '../utils/range-expansion';
+import type { DecisionContext } from './decision-context';
+import { getScenarioKey } from './decision-context';
 
 export interface GTOAlignment {
   actionFrequency: number;
@@ -12,15 +14,12 @@ export interface GTOAlignment {
 }
 
 export function getGTOAlignment(
-  position: Position,
+  context: DecisionContext,
   action: ActionType,
   holeCards: string[],
-  facingBet: boolean,
 ): GTOAlignment {
   const notation = cardsToHandNotation(holeCards as never);
-  const scenarioKey = facingBet
-    ? position === 'BB' ? 'BB_vs_open' : `${position}_vs_3bet`
-    : `${position}_open`;
+  const scenarioKey = getScenarioKey(context);
   const scenario = getScenario(scenarioKey);
   const hands = scenario?.hands ?? [];
   const inRange = isHandInRange(notation, hands);
@@ -37,7 +36,7 @@ export function getGTOAlignment(
 
   if (inRange) {
     if ((actionFreqs.raise ?? 0) >= (actionFreqs.call ?? 0)) {
-      recommendedAction = facingBet ? 'raise' : 'bet';
+      recommendedAction = context.amountToCall > 0 ? 'raise' : 'bet';
       actionFrequency = actionFreqs.raise ?? 0.25;
     } else {
       recommendedAction = 'call';
@@ -49,9 +48,11 @@ export function getGTOAlignment(
     : action === 'call' || action === 'check' ? (actionFreqs.call ?? 0.4)
     : (actionFreqs.raise ?? 0.25);
 
+  // Fix fold scoring: don't give 0.8 alignment for out-of-range folds
+  // Instead, compare EV of fold vs alternatives
   const alignment = inRange
     ? Math.min(1, freq * (action === recommendedAction ? 1 : 0.6))
-    : action === 'fold' ? 0.8 : 0.2;
+    : action === 'fold' ? 0.5 : 0.2;  // Fold gets 0.5 instead of 0.8
 
   let message: string;
   if (action === recommendedAction) {

@@ -4,11 +4,13 @@ import { runEVSimulation } from './ev-client';
 import { getGTOAlignment } from './gto-lookup';
 import { analyzePosition } from './position-analysis';
 import { opponentTracker } from './opponent-tracker';
+import { reconstructDecisionContext, type DecisionContext } from './decision-context';
 
 export interface DecisionFeedback {
   street: Street;
   action: ActionType;
   amount: number;
+  context: DecisionContext;
   ev: {
     chosen: number;
     fold: number;
@@ -40,9 +42,10 @@ export async function analyzeHeroDecision(
   action: GameAction,
   hero: Player,
 ): Promise<DecisionFeedback> {
-  const facingBet = state.currentBet > action.amount;
-  const pot = state.players.reduce((s, p) => s + p.totalBetThisHand, 0);
   const bb = state.config.bigBlind;
+  
+  // Reconstruct decision context at the moment of this decision
+  const context = reconstructDecisionContext(state, action, hero);
 
   let evResult: EVSimResult = {
     foldEV: 0,
@@ -54,25 +57,26 @@ export async function analyzeHeroDecision(
   };
 
   try {
-    const activeOpponents = state.players.filter((p) => !p.isHero && !p.folded).length;
+    // Use actual decision context for EV calculation
     evResult = await runEVSimulation({
       heroCards: hero.holeCards,
-      board: state.board,
-      numOpponents: Math.max(1, activeOpponents),
-      potSize: pot,
-      callAmount: state.config.bigBlind * 2,
-      betAmount: state.config.bigBlind * 3,
+      board: state.board.slice(0, context.boardLength),
+      numOpponents: Math.max(1, context.activeOpponents),
+      potSize: context.potBeforeAction,
+      callAmount: context.amountToCall,
+      betAmount: Math.max(bb * 3, context.potBeforeAction * 0.66), // 3BB or 2/3 pot
       simulations: 2000,
     });
   } catch {
     // Worker unavailable — use estimates
+    const potFraction = context.potBeforeAction > 0 ? 0.3 : 0;
     evResult = {
       foldEV: 0,
-      callEV: pot * 0.3 - bb,
-      betEV: pot * 0.45 - bb * 2,
+      callEV: context.potBeforeAction * potFraction - context.amountToCall * 0.5,
+      betEV: context.potBeforeAction * 0.45 - bb * 2,
       callWinRate: 0.3,
       betWinRate: 0.45,
-      bestAction: 'call',
+      bestAction: context.amountToCall === 0 ? 'call' : 'call',
     };
   }
 
@@ -83,10 +87,9 @@ export async function analyzeHeroDecision(
   const evBB = (v: number) => `${v >= 0 ? '+' : ''}${(v / bb).toFixed(1)}BB`;
 
   const gto = getGTOAlignment(
-    hero.position,
+    context,
     action.action,
     hero.holeCards,
-    facingBet,
   );
 
   const position = analyzePosition(hero.holeCards, hero.position);
@@ -96,19 +99,20 @@ export async function analyzeHeroDecision(
     ? opponentTracker.getExploitMessage(villain)
     : 'No opponent data yet.';
 
-  const verdict = buildVerdict(action.action, chosenEV, gto, position, bb);
+  const verdict = buildVerdict(action.action, chosenEV, gto, position, bb, evResult);
 
   return {
     street: action.street,
     action: action.action,
     amount: action.amount,
+    context,
     ev: {
       chosen: chosenEV,
       fold: evResult.foldEV,
       call: evResult.callEV,
       bet: evResult.betEV,
       bestAction: evResult.bestAction,
-      message: `Your ${action}: ${evBB(chosenEV)}. Fold: ${evBB(evResult.foldEV)}, Call: ${evBB(evResult.callEV)}, Bet: ${evBB(evResult.betEV)}. Best: ${evResult.bestAction}.`,
+      message: `Your ${action.action}: ${evBB(chosenEV)}. Fold: ${evBB(evResult.foldEV)}, Call: ${evBB(evResult.callEV)}, Bet: ${evBB(evResult.betEV)}. Best: ${evResult.bestAction}.`,
     },
     gto: {
       alignment: gto.alignment,
@@ -135,18 +139,42 @@ function buildVerdict(
   gto: ReturnType<typeof getGTOAlignment>,
   position: ReturnType<typeof analyzePosition>,
   bb: number,
+  evResult: EVSimResult,
 ): string {
   const evBB = ev / bb;
+  
+  // Find best alternative EV
+  const alternatives = [
+    { action: 'fold', ev: evResult.foldEV },
+    { action: 'call', ev: evResult.callEV },
+    { action: 'bet', ev: evResult.betEV },
+  ];
+  const bestAlt = alternatives.reduce((best, curr) => curr.ev > best.ev ? curr : best);
+  const evDelta = (ev - bestAlt.ev) / bb;
+  
+  // Fix fold scoring: don't praise folds when better alternatives exist
+  if (action === 'fold') {
+    if (evDelta < -0.3) {
+      // Fold is significantly worse than best alternative
+      return `Fold cost you ${Math.abs(evDelta).toFixed(1)}BB. ${bestAlt.action} was better here.`;
+    } else if (evDelta < -0.1) {
+      return `Fold was okay, but ${bestAlt.action} would gain ${Math.abs(evDelta).toFixed(1)}BB more.`;
+    } else {
+      return `Good fold. ${gto.inRange ? 'Out of GTO range.' : 'Correct decision.'}`;
+    }
+  }
+  
+  // Non-fold actions
   if (gto.alignment > 0.7 && evBB >= 0) {
     return `Good ${action}. Solid GTO-aligned play with positive EV.`;
   }
-  if (evBB > 0.5) {
-    return `+EV ${action} (${evBB.toFixed(1)}BB). ${gto.inRange ? 'Within range.' : 'Exploitative.'}`;
+  if (evDelta > -0.1 && evBB >= 0) {
+    return `+EV ${action} (${evBB.toFixed(1)}BB). ${gto.inRange ? 'Within range.' : 'Exploitative play.'}`;
   }
-  if (evBB < -0.5 && action !== 'fold') {
-    return `Consider folding — ${action} rates as -EV (${evBB.toFixed(1)}BB).`;
+  if (evBB < -0.5) {
+    return `Consider ${bestAlt.action} — ${action} rates as -EV (${evBB.toFixed(1)}BB).`;
   }
-  if (!position.appropriate && action !== 'fold') {
+  if (!position.appropriate) {
     return `Marginal hand for this spot. ${gto.message}`;
   }
   return `Reasonable ${action}. Review GTO frequencies for improvement.`;
