@@ -1,11 +1,33 @@
 import { describe, it, expect } from 'vitest';
 import type { DecisionFeedback } from '../../feedback/feedback-engine';
 import { toReadableFeedback } from '../../feedback/feedback-copy';
+import type { DecisionContext } from '../../feedback/decision-context';
+
+const mockContext: DecisionContext = {
+  street: 'preflop',
+  boardLength: 0,
+  heroPosition: 'BTN',
+  heroStack: 100,
+  potBeforeAction: 3,
+  currentBet: 2,
+  amountToCall: 2,
+  heroTotalBet: 0,
+  scenarioType: 'vs_open',
+  facingSize: 1,
+  activeOpponents: 2,
+  foldedPlayers: 0,
+  effectiveStack: 100,
+  wasOpened: true,
+  was3Bet: false,
+  was4Bet: false,
+  openSize: 2,
+};
 
 const sampleFeedback: DecisionFeedback = {
   street: 'preflop',
   action: 'call',
   amount: 4,
+  context: mockContext,
   ev: {
     chosen: 0.6,
     fold: 0,
@@ -44,6 +66,7 @@ describe('feedback-copy', () => {
   it('rates good plays appropriately', () => {
     const readable = toReadableFeedback({
       ...sampleFeedback,
+      context: mockContext,
       ev: { ...sampleFeedback.ev, chosen: 2, bestAction: 'call' },
       gto: { ...sampleFeedback.gto, alignment: 0.8 },
     }, 2);
