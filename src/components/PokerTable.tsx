@@ -104,6 +104,7 @@ export function PokerTable() {
               }
               isDealer={state.dealerIndex === hero.id && isInHand}
               showCards={isInHand}
+              board={state.board}
             />
           )}
         </div>

@@ -1,21 +1,29 @@
-import type { Player } from '../types/poker';
+import type { Player, Card } from '../types/poker';
 import { PlayingCard } from './PlayingCard';
 import { PlayerAvatar } from './PlayerAvatar';
 import { formatMoney } from '../utils/format';
+import { getHeroHandLabel } from '../utils/hero-hand-label';
 
 interface HeroZoneProps {
   player: Player;
   isActive: boolean;
   isDealer: boolean;
   showCards: boolean;
+  board: Card[];
 }
 
-export function HeroZone({ player, isActive, isDealer, showCards }: HeroZoneProps) {
+export function HeroZone({ player, isActive, isDealer, showCards, board }: HeroZoneProps) {
   const showHoleCards = showCards && player.holeCards.length > 0;
+  const handLabel = showHoleCards ? getHeroHandLabel(player.holeCards, board, player.folded) : null;
 
   return (
     <div className="flex items-end justify-between gap-3 px-1">
-      <div className="flex items-end min-h-[76px]">
+      <div className="flex flex-col items-center gap-1.5 min-h-[76px]">
+        {handLabel && (
+          <div className="offsuit-chip text-[12.5px] font-medium px-3 py-1 whitespace-nowrap">
+            {handLabel}
+          </div>
+        )}
         {showHoleCards ? (
           <div className="flex items-end animate-card-deal">
             {player.holeCards.map((card, i) => (
